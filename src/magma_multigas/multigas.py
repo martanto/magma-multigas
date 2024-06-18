@@ -64,9 +64,9 @@ class MultiGas:
         Returns:
             MultiGasData: Selected data
         """
-        validate_selected_data(type_of_data)
-
         type_of_data = type_of_data.lower()
+
+        validate_selected_data(type_of_data)
 
         if type_of_data not in types:
             raise ValueError(f'⛔ Type of data must be one of {types}')
