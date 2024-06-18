@@ -122,7 +122,7 @@ class MultiGas:
         print("Data selected to plot: {}".format(self.data_selected))
 
         return Plot(
-            df=self.selected.filtered_data,
+            df=self.selected.df,
             y_min=y_min,
             y_max=y_max,
             y_max_multiplier=y_max_multiplier,

@@ -148,14 +148,13 @@ class MultiGasData(Query):
         print(f'⚠️ Data {self.filename} is empty. Skip.')
         return None
 
-    def plot(self, y_min: float = None, y_max: float = None, y_max_multiplier: float = 1,
+    def plot(self, y_min: float = None, y_max: float = None,
              width: int = 12, height: int = 4) -> Plot:
         """Plot selected data and columns.
 
         Args:
             y_min (float): Minimum value
             y_max (float): Maximum value
-            y_max_multiplier (float): Multiplier factor
             width (int): Figure width
             height (int): Figure height
 
@@ -166,7 +165,6 @@ class MultiGasData(Query):
             df=self.get(),
             y_min=y_min,
             y_max=y_max,
-            y_max_multiplier=y_max_multiplier,
             width=width,
             height=height,
         )

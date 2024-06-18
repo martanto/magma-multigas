@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 import os
 
@@ -10,12 +9,10 @@ from matplotlib.dates import date2num
 
 class Plot:
     def __init__(self, df: pd.DataFrame = None, y_min: float = None,
-                 y_max: float = None, y_max_multiplier: float = 1,
-                 width: int = 12, height: int = 4):
+                 y_max: float = None, width: int = 12, height: int = 4):
         self.df = df
         self.y_min = y_min
         self.y_max = y_max
-        self.y_max_multiplier = y_max_multiplier
         self.width = width
         self.height = height
 
@@ -30,12 +27,13 @@ class Plot:
 
         self.figures_dir = figures_dir
 
-    def ax_scatter(self, ax: plt.Axes, column: str) -> plt.Axes:
+    def ax_scatter(self, ax: plt.Axes, column: str, y_max_multiplier: float = 1.0) -> plt.Axes:
         """Scatter plot.
 
         Args:
             ax (plt.Axes): Axes object.
             column (str): Column name.
+            y_max_multiplier (float): Max multiplier. Default is 1.0
 
         Returns:
             plt.Axes: Axes object.
@@ -60,7 +58,7 @@ class Plot:
         y_max = self.y_max
 
         y_min = df[column].min() if y_min is None else y_min
-        y_max = df[column].max() * self.y_max_multiplier if y_max is None else y_max
+        y_max = df[column].max() * y_max_multiplier if y_max is None else y_max
 
         ax.scatter(df.index, df[column], **kwargs)
         ax.set_xlim(date2num(self.start_date), date2num(self.end_date))
@@ -69,7 +67,7 @@ class Plot:
             ax.set_ylim(y_min, y_max)
 
         ax.legend(loc=2, fontsize=8)
-        ax.grid(True, which='both', linestyle='-', linewidth=1, alpha=1)
+        ax.grid(True, which='both', linestyle='--', alpha=1)
         ax.yaxis.get_major_ticks()[0].label1.set_visible(False)
 
         for label in ax.get_xticklabels(which='major'):
@@ -77,12 +75,13 @@ class Plot:
 
         return ax
 
-    def ax_plot(self, ax: plt.Axes, column: str) -> plt.Axes:
+    def ax_plot(self, ax: plt.Axes, column: str, y_max_multiplier: float = 1.0) -> plt.Axes:
         """Line plot.
 
         Args:
             ax (plt.Axes): Axes object.
             column (str): Column name.
+            y_max_multiplier (float): Max multiplier. Default is 1.0
 
         Returns:
             plt.Axes: Axes object.
@@ -107,7 +106,7 @@ class Plot:
         y_max = self.y_max
 
         y_min = df[column].min() if y_min is None else y_min
-        y_max = df[column].max() * self.y_max_multiplier if y_max is None else y_max
+        y_max = df[column].max() * y_max_multiplier if y_max is None else y_max
 
         ax.plot(df.index, df[column], **kwargs)
         ax.set_xlim(date2num(self.start_date), date2num(self.end_date))
@@ -116,7 +115,7 @@ class Plot:
             ax.set_ylim(y_min, y_max)
 
         ax.legend(loc=2, fontsize=8)
-        ax.grid(True, which='both', linestyle='-', linewidth=1, alpha=1)
+        ax.grid(True, which='both', linestyle='--', alpha=1)
         ax.yaxis.get_major_ticks()[0].label1.set_visible(False)
 
         for label in ax.get_xticklabels(which='major'):
@@ -124,11 +123,12 @@ class Plot:
 
         return ax
 
-    def ax_co2_so2_h2s(self, ax: plt.Axes) -> plt.Axes:
+    def ax_co2_so2_h2s(self, ax: plt.Axes, y_max_multiplier: float = 1.0) -> plt.Axes:
         """Specific plot for Average value of CO2, SO2, and H2S.
 
         Args:
-            ax (plt.Axes):
+            ax (plt.Axes): Axe figures
+            y_max_multiplier (float): Max multiplier. Default is 1.0
 
         Returns:
             plt.Axes:
@@ -138,7 +138,7 @@ class Plot:
         y_max = self.y_max
 
         y_min = df['Avg_CO2_lowpass'].min() if y_min is None else y_min
-        y_max = df['Avg_CO2_lowpass'].max() * self.y_max_multiplier if y_max is None else y_max
+        y_max = df['Avg_CO2_lowpass'].max() * y_max_multiplier if y_max is None else y_max
 
         ax.plot(df.index, df['Avg_CO2_lowpass'], color='#039BE5',
                 linestyle='--', marker='D', label='Average CO2 Lowpass')
@@ -155,12 +155,14 @@ class Plot:
         ax.set_title("6 Hours Average\n $CO_{2}$ - $H_{2}S$ - $SO_{2}$ Concentration (ppm)")
         return ax
 
-    def plot_co2_so2_h2s(self, plot_as_individual: bool = False, space_between_plot: float = None) -> str:
+    def plot_co2_so2_h2s(self, plot_as_individual: bool = False, space_between_plot: float = None,
+                         y_max_multiplier: float = 1.0) -> str:
         """Plot Average CO2, SO2, and H2S using six hours of data.
 
         Args:
             plot_as_individual (bool):
             space_between_plot (float):
+            y_max_multiplier (float): Max multiplier. Default is 1.0
 
         Returns:
             Figure save location
@@ -179,7 +181,7 @@ class Plot:
 
         else:
             fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(self.width, self.height))
-            self.ax_co2_so2_h2s(ax)
+            self.ax_co2_so2_h2s(ax, y_max_multiplier)
 
         filename = '{}_{}_co2_so2_h2s_concentration'.format(self.start_date_str, self.end_date_str)
 
@@ -195,7 +197,7 @@ class Plot:
         columns = ['Avg_CO2_H2S_ratio', 'Avg_H2O_CO2_ratio', 'Avg_H2S_SO2_ratio',
                    'Avg_CO2_SO2_ratio', 'Avg_CO2_S_tot_ratio']
 
-        return self.columns(columns=columns)
+        return self.plot_columns(columns=columns)
 
     def plot_columns(self, columns: str | list[str], plot_type: str = 'scatter') -> str:
         """Plot for selected columns

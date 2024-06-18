@@ -162,3 +162,4 @@ input/
 output/
 *.ipynb
 /figures/
+*.png
