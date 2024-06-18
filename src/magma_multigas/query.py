@@ -1,8 +1,28 @@
-from .validator import validate_status, validate_column_name, validate_comparator
-from typing import List, Any, Self
-
+import numpy as np
 import pandas as pd
+
+from .validator import (
+    validate_status,
+    validate_column_name,
+    validate_comparator,
+)
+
+from typing import List, Dict, Any, Self
 from datetime import timedelta
+
+
+def intersection(list_one: List[Any], list_two: List[Any]) -> List[Any]:
+    """Get intersection between two lists
+
+    Args:
+        list_one (List[Any]): First List
+        list_two (List[Any]): Second List
+
+    Returns:
+        List[Any]
+    """
+    intersect_list: List[Any] = [value for value in list_one if value in list_two]
+    return intersect_list
 
 
 class Query:
@@ -15,8 +35,9 @@ class Query:
         Attributes:
             df (pd.DataFrame): data frame
         """
-        self.df: pd.DataFrame = df
-        self.columns: List[str] = df.columns.tolist()
+        self.df_original: pd.DataFrame = df
+        self.df: pd.DataFrame = df.copy(deep=True)
+        self.columns: List[str] = self.df_original.columns.tolist()
         self.columns_selected: List[str] = []
         self.start_date: str = df.index[0].strftime('%Y-%m-%d')
         self.end_date: str = df.index[-1].strftime('%Y-%m-%d')
@@ -55,6 +76,77 @@ class Query:
         self.df = df
         return self.df
 
+    def is_filtered(self) -> bool:
+        """Check if data is filtered
+
+        Returns:
+            bool: True if data is filtered
+        """
+        return False if self.df_original.equals(self.df) else True
+
+    def refresh(self) -> Self:
+        """Refresh dataframe with the original one"""
+        self.df = self.df_original.copy()
+        return self
+
+    def column_has_nan(self, column_name: str) -> bool:
+        """Check if column has NULL or NaN value.
+
+        Args:
+            column_name (str): column name
+
+        Returns:
+            bool: True if column is empty
+        """
+        validate_column_name(column_name, self.columns)
+        return True if (self.df[column_name].isnull().values.any()) else False
+
+    def columns_have_nan(self, columns_name: str | List[str]) -> pd.Series:
+        """Check if columns have NaN value."""
+        empty_dict: Dict[str, bool] = {}
+
+        if isinstance(columns_name, str):
+            columns_name: List[str] = [columns_name]
+
+        for column_name in columns_name:
+            empty_dict[column_name]: bool = self.column_has_nan(column_name)
+
+        return pd.Series(empty_dict)
+
+    def column_is_empty(self, column_name: str) -> bool:
+        """Check if column is empty.
+
+        Args:
+            column_name (str): column name
+
+        Returns:
+            bool: True if column is empty
+        """
+        validate_column_name(column_name, self.columns)
+        return True if (self.df[column_name].sum() == 0) else False
+
+    def columns_are_empty(self, columns_name: str | List[str] = None) -> pd.Series:
+        """Returnn ALL empty columns
+
+        Args:
+            columns_name (str, List[str]): columns name
+
+        Returns:
+            Dict[str, bool]: all empty columns
+        """
+        empty_dict: Dict[str, bool] = {}
+
+        if columns_name is None:
+            columns_name = self.columns
+
+        if isinstance(columns_name, str):
+            columns_name: List[str] = [columns_name]
+
+        for column_name in columns_name:
+            empty_dict[column_name]: bool = self.column_is_empty(column_name)
+
+        return pd.Series(empty_dict)
+
     def count(self) -> int:
         """Count number of data
 
@@ -63,22 +155,70 @@ class Query:
         """
         return len(self.get())
 
-    def select_columns(self, column_names: str | List[str]) -> Self:
+    def select_columns(self, column_names: str | List[str] = None, numeric_only: bool = False) -> Self:
         """Select columns
 
         Args:
             column_names (str | List(str)): column names
+            numeric_only (bool): Select numeric columns only
 
         Returns:
             self (Self)
         """
+        skip_validating: bool = False
+
+        if (column_names is None) & (numeric_only is True):
+            self.select_numeric_columns(column_names, skip_validating=True)
+            return self
+
+        if column_names is None:
+            column_names = self.columns
+            skip_validating = True
+
         if isinstance(column_names, str):
             column_names = [column_names]
 
-        for column_name in column_names:
-            validate_column_name(column_name, self.columns)
+        if skip_validating is False:
+            for column_name in column_names:
+                validate_column_name(column_name, self.columns)
 
-        self.columns_selected = column_names
+        self.columns_selected: List[str] = column_names
+
+        if numeric_only is True:
+            self.select_numeric_columns(column_names, skip_validating=True)
+
+        return self
+
+    def select_numeric_columns(self, column_names: str | List[str] = None,
+                               skip_validating: bool = False) -> Self:
+        """Select only numeric columns from dataframe.
+
+        Args:
+            column_names (str | List[str]): column names
+            skip_validating (bool): Skip validating column names
+
+        Returns:
+            self (Self)
+        """
+        numeric_columns: List[str] = self.df.select_dtypes(include=np.number).keys().to_list()
+
+        if column_names is None:
+            self.columns_selected = numeric_columns
+            return self
+
+        if isinstance(column_names, str):
+            column_names = [column_names]
+
+        if skip_validating is False:
+            for column_name in column_names:
+                validate_column_name(column_name, self.columns)
+
+        numeric_columns = intersection(column_names, numeric_columns)
+
+        if len(numeric_columns) == 0:
+            print("⚠️ No numeric column(s) found in your selected columns: {}". format(column_names))
+
+        self.columns_selected = numeric_columns
         return self
 
     def where(self, column_name: str, comparator: str, value: Any) -> Self:

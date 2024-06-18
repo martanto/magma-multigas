@@ -5,7 +5,7 @@ from .query import Query
 from .validator import validate_file_type
 from .plot import Plot
 from pathlib import Path
-from typing import Dict, Self, Tuple
+from typing import Dict, Tuple
 
 
 def start_and_end_date(df: pd.DataFrame = None) -> Tuple[str, str]:
@@ -19,28 +19,20 @@ def start_and_end_date(df: pd.DataFrame = None) -> Tuple[str, str]:
 
 
 class MultiGasData(Query):
-    def __init__(self, type_of_data: str, csv: str, force: bool = False):
+    def __init__(self, type_of_data: str, csv_file: str, force: bool = False):
         """Data of MultiGas
         """
         self.current_dir = os.getcwd()
         output_dir = os.path.join(self.current_dir, 'output')
         os.makedirs(output_dir, exist_ok=True)
+
         self.force = force
         self.output_dir = output_dir
-        self.csv: str = self.replace_nan(csv)
-        self.filename: str = Path(self.csv).stem
+        self.csv_file: str = self.replace_nan(csv_file)
+        self.filename: str = Path(self.csv_file).stem
         self.type_of_data: str = type_of_data
-        self.original_data: pd.DataFrame = self._df()
-        self.filtered_data: pd.DataFrame = self.original_data.copy()
-        super().__init__(self.filtered_data)
 
-    def is_filtered(self) -> bool:
-        """Check if data is filtered or not
-
-        Returns:
-            True if filtered.
-        """
-        return False if self.original_data.equals(self.filtered_data) else True
+        super().__init__(self.set_df())
 
     def replace_nan(self, csv: str) -> str:
         """Replacing 'NAN' value with np.NaN
@@ -79,7 +71,7 @@ class MultiGasData(Query):
         Returns:
             Dict[str, str]: metadata property of MultiGas
         """
-        csv = self.csv
+        csv = self.csv_file
 
         with open(csv, 'r') as file:
             contents: list[str] = file.readlines()[0].replace("\"", '').split(',')
@@ -87,7 +79,7 @@ class MultiGasData(Query):
                 "format_data": contents[0].strip(),
                 'station': contents[1].strip(),
                 'logger_type': contents[2].strip(),
-                'data_counts': len(self.original_data),
+                'data_counts': len(self.df_original),
                 'firmware': contents[4].strip(),
                 'program_name': contents[5].strip(),
                 'unknown': contents[6].strip(),
@@ -96,23 +88,22 @@ class MultiGasData(Query):
             file.close()
             return headers
 
-    def refresh(self) -> Self:
-        """Refresh original values and filtered values"""
-        self.original_data = self._df()
-        self.filtered_data = self.original_data.copy()
-        super().__init__(self.filtered_data)
-        return self
-
-    def _df(self) -> pd.DataFrame:
+    def set_df(self, csv_file: str = None, index_col: str = None) -> pd.DataFrame:
         """Get data from MultiGas
 
         Returns:
             pd.DataFrame: data from MultiGas
         """
-        df = pd.read_csv(self.csv,
+        if csv_file is None:
+            csv_file = self.csv_file
+
+        if index_col is None:
+            index_col = 'TIMESTAMP'
+
+        df = pd.read_csv(csv_file,
                          skiprows=lambda x: x in [0, 2, 3],
-                         parse_dates=['TIMESTAMP'],
-                         index_col=['TIMESTAMP'])
+                         parse_dates=[index_col],
+                         index_col=[index_col])
         return df
 
     def save_as(self, file_type: str = 'excel', output_dir: str = None,
@@ -143,7 +134,7 @@ class MultiGasData(Query):
         output_dir = os.path.join(output_dir, sub_output_dir)
         os.makedirs(output_dir, exist_ok=True)
 
-        df = self.get() if use_filtered else self.original_data
+        df = self.get() if use_filtered else self.df_original
 
         start_date, end_date = start_and_end_date(df)
         filename = f"{start_date}_{end_date}_{self.filename}.{file_extension}"
@@ -179,7 +170,3 @@ class MultiGasData(Query):
             width=width,
             height=height,
         )
-
-    def get(self) -> pd.DataFrame:
-        self.filtered_data: pd.DataFrame = super().get()
-        return self.filtered_data
