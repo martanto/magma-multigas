@@ -1,0 +1,34 @@
+name,definition
+TIMESTAMP,Timestamp from datalogger's internal clock.
+RECORD,A unique number assigned to each row of observations in a data table.
+Site_Name,Name of multi-GAS instrument and/or location.
+Duty_Cycle,Numeric indication of the number of hours between sample cycles.
+Status_Flag,Numerical indicator of the operational state of the Multi-GAS station.
+Avg_batt_volt,"Average voltage of multi-GAS power source during sample cycle, uncompensated for diode drops that may be >1 volt depending on the power system design."
+Avg_regulated_volt,Average voltage during sample cycle of regulated power source used to power multi-GAS electronics.
+Avg_PTemp,Average temperature during sample cycle measured by a thermistor inside the instrument's datalogger.
+Avg_AirT,Average ambient air temperature during sample cycle in degrees Celsius.
+Avg_AirRH,Average relative humidity of ambient air during sample cycle.
+Avg_FumaroleT,Average temperature recorded by a K-Type thermocouple during sample cycle. Commonly used to track volcanic gas vent or fumarole temperatures.
+Avg_SampleP,Average pressure in the sample line of the instrument in hectopascals (hPa) during the sample cycle.
+Avg_AirP,Ambient air pressure in hectopascals (hPa)
+Avg_Wind_Speed,Average two-dimensional horizontal wind speed during the sample cycle
+Avg_Wind_Direction,Average two-dimensional horizontal wind direction during the sample cycle
+H2O,Average molar mixing ratio by volume of water vapor during the sample cycle
+Avg_CO2_lowpass,"Average molar mixing ratio by volume of carbon dioxide gas (CO2) during the sample cycle. Onboard processing with a single pole recursive lowpass filter is applied to raw CO2 data collected at 1 Hz to match the response of CO2 instrument to the electrochemical sulfur sensors. The filter takes the form: CO2_lowpass = [CO2,n*a + CO2,n-1*b] where coefficients a and b sum to equal 1 and are derived empirically from step response data from sensor calibrations."
+Avg_SO2,"Average molar mixing ratio by volume of sulfur dioxide gas (SO2) during the sample cycle. A pressure correction (pcorr) and linear span and offset values applied to raw sensor values: SO2=(SO2,pcorr)*SPAN+OFFSET. The appropriate pressure correction is determined by testing."
+Avg_H2S,"Average molar mixing ratio by volume of hydrogen sulfide gas (H2S) during the sample cycle. H2S values are not corrected for cross-sensitivity to SO2. A pressure correction (pcorr) and linear span and offset values applied to raw sensor values: H2S=(H2S,pcorr)*SPAN+OFFSET. The appropriate pressure correction is determined by testing."
+Avg_H2O_CO2_ratio,Average molar ratio during the sample cycle calculated using automated onboard linear regression data processing routines and quality metrics.
+Avg_H2O_CO2_intercept,Average y-intercept from linear regression to find gas ratios during the sample cycle.
+#_valid_H2O_CO2_ratios,"The number of valid ratios calculated in a sample cycle. Automated onboard routines calculate gas ratios every second of a sample cycle using a sliding 3-minute long window. When several quality criterea are met (r2 > 0.7, slope > 0, minimum quantities of target gases) a ratio is considered valid and is recorded. For data collected at 1 Hz, up to 1800 valid ratios may be calculated in a 30-minute long sampling period."
+Avg_CO2_SO2_ratio,Average molar ratio during the sample cycle calculated using automated onboard linear regression data processing routines and quality metrics.
+Avg_CO2_SO2_intercept,Average y-intercept from linear regression to find gas ratios during the sample cycle.
+#_valid_CO2_SO2_ratios,"The number of valid ratios calculated in a sample cycle. Automated onboard routines calculate gas ratios every second of a sample cycle using a sliding 3-minute long window. When several quality criterea are met (r2 > 0.7, slope > 0, minimum quantities of target gases) a ratio is considered valid and is recorded. For data collected at 1 Hz, up to 1800 valid ratios may be calculated in a 30-minute long sampling period."
+Avg_H2S_SO2_ratio,Average molar ratio during the sample cycle calculated using automated onboard linear regression data processing routines and quality metrics. H2S values are not corrected for cross-sensitivity to SO2.
+Avg_H2S_SO2_intercept,Average y-intercept from linear regression to find gas ratios during the sample cycle. H2S values are not corrected for cross-sensitivity to SO2.
+#_valid_H2S_SO2_ratios,"The number of valid ratios calculated in a sample cycle. Automated onboard routines calculate gas ratios every second of a sample cycle using a sliding 3-minute long window. When several quality criterea are met (r2 > 0.7, slope > 0, minimum quantities of target gases) a ratio is considered valid and is recorded. For data collected at 1 Hz, up to 1800 valid ratios may be calculated in a 30-minute long sampling period. H2S values are not corrected for cross-sensitivity to SO2."
+Avg_CO2_S_tot_ratio,"Average molar ratio during the sample cycle calculated using automated onboard linear regression data processing routines and quality metrics. S_tot (""S total"") = SO2 + H2S. H2S values are not corrected for cross-sensitivity to SO2."
+Avg_CO2_S_tot_intercept,"Average y-intercept from linear regression to find gas ratios during the sample cycle. S_tot (""S total"") = SO2 + H2S. H2S values are not corrected for cross-sensitivity to SO2."
+#_valid_CO2_S_tot_ratios,"The number of valid ratios calculated in a sample cycle. Automated onboard routines calculate gas ratios every second of a sample cycle using a sliding 3-minute long window. When several quality criterea are met (r2 > 0.7, slope > 0, minimum quantities of target gases) a ratio is considered valid and is recorded. For data collected at 1 Hz, up to 1800 valid ratios may be calculated in a 30-minute long sampling period. S_tot (""S total"") = SO2 + H2S. H2S values are not corrected for cross-sensitivity to SO2."
+Avg_SO2_proportion,"The average proportion of SO2 to total sulfur (SO2 + H2S), expressed as a percentage. The value is calculated from the H2S/SO2 ratio but may be inaccurate because H2S values are not corrected for cross-sensitivity to SO2."
+Avg_H2S_proportion,"The average proportion of H2S to total sulfur (SO2 + H2S), expressed as a percentage. The value is calculated from the H2S/SO2 ratio but may be inaccurate because H2S values are not corrected for cross-sensitivity to SO2."

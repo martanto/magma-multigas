@@ -1,0 +1,42 @@
+[build-system]
+requires = ["flit_core>=3.4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name =  "magma-multigas"
+version = "0.1.0"
+authors = [
+    {name = "Martanto", email = "martanto@live.com"},
+]
+description = "MultiGas package for internal use. A collaboration between CVGHM and USGS"
+readme = "README.md"
+license = {file = "LICENSE"}
+keywords = ["gas", "volcano", "multigas", "usgs", "cvghm", "pvmbg"]
+requires-python = ">=3.10"
+dependencies = [
+    "openpyxl",
+    "pandas",
+    "numpy",
+    "matplotlib",
+    "windrose"
+]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.optional-dependencies]
+base = [
+    "openpyxl",
+    "pandas",
+    "numpy",
+    "matplotlib",
+    "windrose",
+]
+
+[project.urls]
+Homepage = "https://github.com/martanto/magma-multigas"
+Issues = "https://github.com/martanto/magma-multigas/issues"
