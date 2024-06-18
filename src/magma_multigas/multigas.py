@@ -48,7 +48,7 @@ class MultiGas:
         self.data_selected: str = default
         self.selected: MultiGasData = self.get(default)
 
-        print(f'ℹ️ Data selected: {default}')
+        print(f'ℹ️ Data DEFAULT selected: {default}')
 
     @str
     def info(self):
@@ -130,13 +130,16 @@ class MultiGas:
             height=height,
         )
 
-    def get(self, type_of_data: str) -> MultiGasData:
+    def get(self, type_of_data: str = None) -> MultiGasData:
         """Get selected data.
 
         Returns:
             MultiGasData: Selected data
         """
-        print("Selected data: {}".format(type_of_data))
+        if type_of_data is None:
+            type_of_data = self.data_selected
+
+        print("Selected data loaded: {}".format(type_of_data))
 
         match type_of_data:
             case 'two_seconds':
