@@ -11,14 +11,13 @@ from matplotlib.dates import date2num
 class Plot:
     def __init__(self, df: pd.DataFrame = None, y_min: float = None,
                  y_max: float = None, y_max_multiplier: float = 1,
-                 width: int = 12, height: int = 4, filename: str = None):
+                 width: int = 12, height: int = 4):
         self.df = df
         self.y_min = y_min
         self.y_max = y_max
         self.y_max_multiplier = y_max_multiplier
         self.width = width
         self.height = height
-        self.filename = filename
 
         self.start_date = df.index[0]
         self.end_date = df.index[-1]
@@ -156,7 +155,7 @@ class Plot:
         ax.set_title("6 Hours Average\n $CO_{2}$ - $H_{2}S$ - $SO_{2}$ Concentration (ppm)")
         return ax
 
-    def co2_so2_h2s(self, plot_as_individual: bool = False, space_between_plot: float = None) -> str:
+    def plot_co2_so2_h2s(self, plot_as_individual: bool = False, space_between_plot: float = None) -> str:
         """Plot Average CO2, SO2, and H2S using six hours of data.
 
         Args:
@@ -186,7 +185,7 @@ class Plot:
 
         return self.save(fig, filename)
 
-    def gas_ratio(self) -> str:
+    def plot_gas_ratio(self) -> str:
         """Plot ratio average value of CO2/H2S, H2O/CO2, H2S/SO2,
         CO2/SO2 and CO2/S-Total Concentration (ppm)
 
@@ -198,7 +197,7 @@ class Plot:
 
         return self.columns(columns=columns)
 
-    def columns(self, columns: str | list[str], plot_type: str = 'scatter') -> str:
+    def plot_columns(self, columns: str | list[str], plot_type: str = 'scatter') -> str:
         """Plot for selected columns
 
         Args:
@@ -233,9 +232,6 @@ class Plot:
         Returns:
             Figure save location
         """
-        if self.filename is not None:
-            filename = self.filename
-
         save_path = os.path.join(self.figures_dir, f"{filename}.png")
         fig.savefig(save_path, dpi=300)
 
