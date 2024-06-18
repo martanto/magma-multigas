@@ -2,10 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import pandas as pd
-import xml.etree.ElementTree as ET
+from xml.etree import ElementTree
+from importlib_resources import files, as_file
 
-tree = ET.parse('metadata_v4.xml')
-root = tree.getroot()
+xml_path = files("magma_multigas.resources").joinpath('metadata_v4.xml')
+
+with as_file(xml_path) as xml_file:
+    tree = ElementTree.parse(xml_file)
+    root = tree.getroot()
 
 detailed_six_hours = root[2][0]
 
