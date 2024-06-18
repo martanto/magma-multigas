@@ -137,7 +137,7 @@ class MultiGasData(Query):
         df = self.get() if use_filtered else self.df_original
 
         start_date, end_date = start_and_end_date(df)
-        filename = f"{start_date}_{end_date}_{self.filename}.{file_extension}"
+        filename = f"{self.type_of_data}_{start_date}_{end_date}_{self.filename}.{file_extension}"
         file_location: str = os.path.join(output_dir, filename)
 
         if not df.empty:
