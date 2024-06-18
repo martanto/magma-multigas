@@ -42,7 +42,7 @@ def validate_file_type(file_type: str) -> bool | Exception:
     return True
 
 
-def validate_select_data(select_data: str) -> bool | Exception:
+def validate_selected_data(select_data: str) -> bool | Exception:
     """Validating selected data.
 
     Args:
@@ -101,16 +101,20 @@ def validate_column_name(column_name: str, column_list: list[str]) -> bool | Exc
     return True
 
 
-def validate_status(status_value: int) -> bool | Exception:
+def validate_status(status_value: int, status_column: str = None) -> bool | Exception:
     """Validating status.
 
     Args:
         status_value (int): Status value.
+        status_column (str): Name of the column status
 
     Returns:
         True or raise an Exception.
     """
-    if in_values('Status_Flag', status_value, STATUS_NO) is True:
+    if status_column is None:
+        status_column = 'Status_Flag'
+
+    if in_values(status_column, status_value, STATUS_NO) is True:
         return True
 
     for stat in STATUSES:

@@ -1,6 +1,6 @@
 from .multigas_data import MultiGasData
 from .plot import Plot
-from .validator import validate_select_data, validate_file_type
+from .validator import validate_selected_data, validate_file_type
 from typing import Self
 
 
@@ -64,7 +64,7 @@ class MultiGas:
         Returns:
             MultiGasData: Selected data
         """
-        validate_select_data(type_of_data)
+        validate_selected_data(type_of_data)
 
         type_of_data = type_of_data.lower()
 
