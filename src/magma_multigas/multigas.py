@@ -38,17 +38,19 @@ class MultiGas:
                  one_minute: str,
                  zero: str,
                  span: str = None,
+                 overwrite: bool = False,
                  default: str = 'six_hours'):
-        self.two_seconds: MultiGasData = MultiGasData('two_seconds', two_seconds)
-        self.six_hours: MultiGasData = MultiGasData('six_hours', six_hours)
-        self.one_minute: MultiGasData = MultiGasData('one_minute', one_minute)
-        self.zero: MultiGasData = MultiGasData('zero', zero)
-        self.span: MultiGasData | None = MultiGasData('span', span) if span is not None else None
+        self.two_seconds: MultiGasData = MultiGasData('two_seconds', two_seconds, force=overwrite)
+        self.six_hours: MultiGasData = MultiGasData('six_hours', six_hours, force=overwrite)
+        self.one_minute: MultiGasData = MultiGasData('one_minute', one_minute, force=overwrite)
+        self.zero: MultiGasData = MultiGasData('zero', zero, force=overwrite)
+        self.span: MultiGasData | None = MultiGasData('span', span, force=overwrite) \
+            if span is not None else None
 
         self.data_selected: str = default
         self.selected: MultiGasData = self.get(default)
 
-        print(f'ℹ️ Data DEFAULT selected: {default}')
+        print(f'ℹ️ DEFAULT selected: {default}')
 
     @str
     def info(self):
@@ -75,7 +77,7 @@ class MultiGas:
 
         self.selected: MultiGasData = self.get(type_of_data)
 
-        print("Data selected : {}".format(type_of_data))
+        print("ℹ️ {} data selected.".format(type_of_data))
         return self
 
     def where_date_between(self, start_date: str, end_date: str) -> Self:
@@ -125,7 +127,6 @@ class MultiGas:
             df=self.selected.df,
             y_min=y_min,
             y_max=y_max,
-            y_max_multiplier=y_max_multiplier,
             width=width,
             height=height,
         )
@@ -139,7 +140,7 @@ class MultiGas:
         if type_of_data is None:
             type_of_data = self.data_selected
 
-        print("Selected data loaded: {}".format(type_of_data))
+        print("✅ {} data loaded".format(type_of_data))
 
         match type_of_data:
             case 'two_seconds':
