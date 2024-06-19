@@ -98,14 +98,14 @@ two_seconds_data.df
 ```
 For anyone not familiar with `df` abbreviation, it is stand for _dataframe_. Just imagine it as an excel with header, but it is in python.
 
-![df-review.png](images/df-review.png)
+![df-review.png](https://github.com/martanto/magma-multigas/blob/master/images/df-review.png?raw=true)
 
 You can also see the columns name:
 ```python
 two_seconds_data.columns
 ```
 It will show all the columns name:
-![columns.png](images/columns.png)
+![columns.png](https://github.com/martanto/magma-multigas/blob/master/images/columns.png?raw=true)
 
 ## Filtering
 We can do fluent filtering data by using this code below. And it also support chaining filtering.  
@@ -127,7 +127,7 @@ filtered_two_seconds.get()
 ```
 
 You can see the example of the results below. Here we only found 1 result based on our query filtering.
-![filtering.png](images/filtering.png)
+![filtering.png](https://github.com/martanto/magma-multigas/blob/master/images/filtering.png?raw=true)
 
 To check and count the results:
 ```python
@@ -177,7 +177,7 @@ plot_six_hours.plot_co2_so2_h2s()
 ```
 
 You can see the result here:
-![plot_example_1.png](images/plot_example_1.png)
+![plot_example_1.png](https://github.com/martanto/magma-multigas/blob/master/images/plot_example_1.png?raw=true)
 
 From the plot above we can see there ae some anomaly values (below 400). We can re-filtering once again to optimize the result. In this case we will select column `Avg_CO2_lowpass` which value greater than or equal to `250`
 ```python
@@ -190,7 +190,7 @@ filtered_six_hours.plot().plot_co2_so2_h2s()
 ```
 
 Result:
-![plot_example_2.png](images/plot_example_2.png)
+![plot_example_2.png](https://github.com/martanto/magma-multigas/blob/master/images/plot_example_2.png?raw=true)
 
 We can also plot as an individual by adding parameter `plot_as_individual=True`
 ```python
@@ -200,7 +200,7 @@ filtered_six_hours.plot().plot_co2_so2_h2s(
 ```
 
 And the result:
-![plot_example_3.png](images/plot_example_3.png)
+![plot_example_3.png](https://github.com/martanto/magma-multigas/blob/master/images/plot_example_3.png?raw=true)
 
 ###  Plot Specific Column(s)
 Select columns to plot:
@@ -214,4 +214,4 @@ filtered_six_hours.plot(height=2).plot_columns(columns_to_plot)
 ```
 
 Results:
-![plot_example_4.png](images/plot_example_4.png)
+![plot_example_4.png](https://github.com/martanto/magma-multigas/blob/master/images/plot_example_4.png?raw=true)
