@@ -19,7 +19,7 @@ First we need to import the package.
 from magma_multigas import MultiGas
 ```
 
-Then we need to add all the required files. Please change the files location with your multi gas data. At the moment I am not including the `span` data files. Will add later after having understanding what `span` data is.
+Then we need to add all the required files. Please change the files location with your multi gas data. At the moment we are excluding the `span` data files. Will add later in future development.
 ```python
 two_seconds = 'D:\\Projects\\magma-multigas\\input\\TANG_RTU_ChemData_Sec2.dat'
 six_hours = 'D:\\Projects\\magma-multigas\\input\\TANG_RTU_Data_6Hr.dat'
@@ -27,7 +27,7 @@ one_minute = 'D:\\Projects\\magma-multigas\\input\\TANG_RTU_Wx_Min1.dat'
 zero = 'D:\\Projects\\magma-multigas\\input\\TANG_RTU_Zero_Data.dat'
 ```
 
-Initiating the MultiGas module with the code below. This code will correct the "NAN" data, and create a new file into your current poject directory. The default location is `<your project directory>/output/normalize` . 
+Initiate MultiGas module with the code below. This code will correct "NAN" data, and create a new file into your current poject directory. The default location is `<your project directory>/output/normalize` . 
 ```python
 multigas = MultiGas(
     two_seconds=two_seconds,
@@ -37,7 +37,7 @@ multigas = MultiGas(
 )
 ```
 
-By initiating the module, we already have You can also check the output after run the code.
+By initiating the module, we can check the output after run the code.
 ```markdown
 💾 New file saved to D:\Projects\magma-multigas\output\normalize\TANG_RTU_ChemData_Sec2.dat
 💾 New file saved to D:\Projects\magma-multigas\output\normalize\TANG_RTU_Data_6Hr.dat
@@ -49,7 +49,7 @@ By initiating the module, we already have You can also check the output after ru
 
 ---
 
-We can do filtering all the data we have by using this code. At this example I am trying to select ALL the data between `start_date = 2024-05-17` and `end_date = 2024-06-18`
+We can filter the data we have by using the code below. At this example we will select data between `start_date = 2024-05-17` and `end_date = 2024-06-18`.
 ```python
 data_filtered = multigas.where_date_between(start_date='2024-05-17', end_date='2024-06-18').save(file_type='excel')
 ```
@@ -192,7 +192,7 @@ filtered_six_hours.plot().plot_co2_so2_h2s()
 Result:
 ![plot_example_2.png](images/plot_example_2.png)
 
-We can also plot as an individual plot by adding parameter `plot_as_individual=True`
+We can also plot as an individual by adding parameter `plot_as_individual=True`
 ```python
 filtered_six_hours.plot().plot_co2_so2_h2s(
     plot_as_individual=True

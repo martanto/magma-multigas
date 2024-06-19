@@ -107,7 +107,7 @@ class MultiGasData(Query):
         return df
 
     def save_as(self, file_type: str = 'excel', output_dir: str = None,
-                use_filtered: bool = True, **kwargs) -> str | None:
+                filename: str = None, use_filtered: bool = True, **kwargs) -> str | None:
         """Save data from MultiGas to specified file type
 
         Args:
@@ -137,8 +137,11 @@ class MultiGasData(Query):
         df = self.get() if use_filtered else self.df_original
 
         start_date, end_date = start_and_end_date(df)
-        filename = f"{self.type_of_data}_{start_date}_{end_date}_{self.filename}.{file_extension}"
-        file_location: str = os.path.join(output_dir, filename)
+
+        if filename is None:
+            filename = f"{self.type_of_data}_{start_date}_{end_date}_{self.filename}.{file_extension}"
+
+        file_location: str = os.path.join(output_dir, f"{filename}.{file_extension}")
 
         if not df.empty:
             df.to_excel(file_location, **kwargs) if file_type != 'csv' \

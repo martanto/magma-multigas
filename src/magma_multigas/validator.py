@@ -1,9 +1,10 @@
 from typing import Tuple, List, Any
-from datetime import date
+from datetime import date, datetime
 
-
-STATUS_NO: list[int] = [0, 1, 4, 6, 10, 11, 14, 16]
+STATUS_NO: list[int] = [-2, -1, 0, 1, 4, 6, 10, 11, 14, 16]
 STATUS_DESCRIPTION: list[str] = [
+    'Chemical Sensor Off',
+    'Warming Up',
     'Zero',
     'Sample Acquisition',
     'Standart Gas Measurement for CO2 and SO2',
@@ -135,4 +136,24 @@ def validate_date(date_str: str) -> bool | Exception:
         date.fromisoformat(date_str)
         return True
     except ValueError:
-        raise ValueError("⛔ Incorrect data format, should be YYYY-MM-DD")
+        raise ValueError("⛔ Incorrect date format, should be yyyy-mm-dd")
+
+
+def validate_datetime(datetime_str: str) -> bool | Exception:
+    """Validating date time format.
+
+    Args:
+        datetime_str (str): Date time format.
+
+    Returns:
+        True or raise an Exception.
+    """
+    try:
+        datetime.fromisoformat(datetime_str)
+        return True
+    except ValueError:
+        raise ValueError("⛔ Incorrect date time format, should be yyyy-mm-dd HH:MM:SS")
+
+
+def validate_mutligas_data_type(mutligas_data_type: str) -> bool | Exception:
+    return validate_selected_data(mutligas_data_type)

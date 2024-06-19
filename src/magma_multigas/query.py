@@ -5,10 +5,11 @@ from .validator import (
     validate_status,
     validate_column_name,
     validate_comparator,
+    validate_datetime,
 )
 
 from typing import List, Dict, Any, Self
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 
 def intersection(list_one: List[Any], list_two: List[Any]) -> List[Any]:
@@ -41,6 +42,8 @@ class Query:
         self.columns_selected: List[str] = []
         self.start_date: str = df.index[0].strftime('%Y-%m-%d')
         self.end_date: str = df.index[-1].strftime('%Y-%m-%d')
+        self.start_datetime: pd.Timestamp = pd.Timestamp(df.index[0])
+        self.end_datetime: pd.Timestamp = pd.Timestamp(df.index[-1])
 
     def translate_comparator(self, column_name: str, comparator: str, value: Any) -> pd.DataFrame:
         """Translate comparator
@@ -87,6 +90,7 @@ class Query:
     def refresh(self) -> Self:
         """Refresh dataframe with the original one"""
         self.df = self.df_original.copy()
+        self.columns_selected = []
         return self
 
     def column_has_nan(self, column_name: str) -> bool:
@@ -282,20 +286,33 @@ class Query:
         """Filter data based on start and end date
 
         Args:
-            start_date (str): start date. Date format YYYY-MM-DD
-            end_date (str): end date. Date format YYYY-MM-DD
+            start_date (str): start date. Date format yyyy-mm-dd or yyyy-mm-dd HH:MM:SS
+            end_date (str): end date. Date format yyyy-mm-dd or yyyy-mm-dd HH:MM:SS
+
+        Raises:
+            ValueError: If start_date and end_date are not different
 
         Returns:
             self (Self)
         """
-        self.start_date = start_date
-        self.end_date = end_date
+        validate_datetime(start_date)
+        validate_datetime(end_date)
 
-        start_date = pd.to_datetime(start_date, format='%Y-%m-%d')
-        end_date = pd.to_datetime(end_date, format='%Y-%m-%d') + timedelta(days=1)
+        start_datetime: pd.Timestamp = pd.to_datetime(start_date)
+        end_datetime: pd.Timestamp = pd.to_datetime(end_date)
+
+        if (start_datetime > end_datetime) or (start_datetime == end_datetime):
+            raise ValueError("⛔ end_date must be greater than start_date. "
+                             "Also start_date and end_date must be different")
+
+        self.start_date = start_datetime.strftime('%Y-%m-%d')
+        self.end_date = end_datetime.strftime('%Y-%m-%d')
+
+        self.start_datetime = start_datetime
+        self.end_datetime = end_datetime
 
         df = self.df
-        self.df: pd.DataFrame = df[(df.index >= start_date) & (df.index <= end_date)]
+        self.df: pd.DataFrame = df[(df.index >= start_datetime) & (df.index <= end_datetime)]
         return self
 
     def get(self) -> pd.DataFrame:
