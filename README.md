@@ -179,7 +179,7 @@ plot_six_hours.plot_co2_so2_h2s()
 You can see the result here:
 ![plot_example_1.png](https://github.com/martanto/magma-multigas/blob/master/images/plot_example_1.png?raw=true)
 
-From the plot above we can see there ae some anomaly values (below 400). We can re-filtering once again to optimize the result. In this case we will select column `Avg_CO2_lowpass` which value greater than or equal to `250`
+From the plot above we can see there ae some anomaly values (below 400 for Av. CO2 Lowpass). We can re-filter it once again to optimize the result. In this case we will select column `Avg_CO2_lowpass` which value greater than or equal to `250`
 ```python
 filtered_six_hours = filtered_six_hours.where('Avg_CO2_lowpass', '>=', 250)
 ```
