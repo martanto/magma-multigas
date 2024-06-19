@@ -33,6 +33,7 @@ class MultiGasData(Query):
         self.type_of_data: str = type_of_data
 
         super().__init__(self.set_df())
+        print(f"📅 {type_of_data} available from {self.start_datetime} to {self.end_datetime}")
 
     def replace_nan(self, csv: str) -> str:
         """Replacing 'NAN' value with np.NaN
@@ -113,6 +114,7 @@ class MultiGasData(Query):
         Args:
             file_type (str): Chose between 'csv', 'excel', 'xlsx', 'xls'
             output_dir (str): directory to save to
+            filename (str): filename
             use_filtered (bool): use filtered data
             kwargs (dict): keyword arguments
 
