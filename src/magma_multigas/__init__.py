@@ -4,6 +4,7 @@
 from magma_multigas.multigas import MultiGas
 from magma_multigas.multigas_data import MultiGasData
 from magma_multigas.resources import columns_description
+from magma_multigas.validator import STATUSES
 
 from pkg_resources import get_distribution
 
@@ -18,4 +19,5 @@ __all__ = [
     "MultiGas",
     "MultiGasData",
     "columns_description",
+    "STATUSES",
 ]
