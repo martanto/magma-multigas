@@ -67,7 +67,8 @@ def validate_comparator(comparator: str) -> bool | Exception:
         True or raise an Exception.
     """
     if comparator not in COMPARATORS:
-        raise ValueError('⛔ Invalid comparator: {}. Valid comparators are {}'.format(comparator, COMPARATORS))
+        raise ValueError('⛔ Invalid comparator: {}. Valid comparators are {}'
+                         .format(comparator, COMPARATORS))
     return True
 
 
@@ -83,7 +84,8 @@ def in_values(column_name: str, value: Any, list_value: Any) -> bool | Exception
         True or raise an Exception.
     """
     if value not in list_value:
-        raise ValueError("⛔ Value: {} of column {} must be in {}".format(value, column_name, list_value))
+        raise ValueError("⛔ Value: {} of column {} must be in {}"
+                         .format(value, column_name, list_value))
     return True
 
 
@@ -98,7 +100,8 @@ def validate_column_name(column_name: str, column_list: list[str]) -> bool | Exc
         True or raise an Exception.
     """
     if column_name not in column_list:
-        raise ValueError("⛔ Column {} is not found in {}".format(column_name, column_list))
+        raise ValueError("⛔ Column {} is not found in {}"
+                         .format(column_name, column_list))
     return True
 
 
@@ -152,7 +155,8 @@ def validate_datetime(datetime_str: str) -> bool | Exception:
         datetime.fromisoformat(datetime_str)
         return True
     except ValueError:
-        raise ValueError("⛔ Incorrect date time format, should be yyyy-mm-dd HH:MM:SS")
+        raise ValueError("⛔ Incorrect date time format, should be "
+                         "yyyy-mm-dd or yyyy-mm-dd HH:MM:SS")
 
 
 def validate_mutligas_data_type(mutligas_data_type: str) -> bool | Exception:
