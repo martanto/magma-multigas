@@ -14,12 +14,12 @@ pip install magma-multigas
 
 ---
 
-First we need to import the package.
+Import the package first:
 ```python
 from magma_multigas import MultiGas
 ```
 
-Then we need to add all the required files. Please change the files location with your multi gas data. At the moment we are excluding the `span` data files. Will add later in future development.
+Then lets add all the required files. Please change the files location with your multi gas data. At the moment we are excluding the `span` data files. Will add later in future development.
 ```python
 two_seconds = 'D:\\Projects\\magma-multigas\\input\\TANG_RTU_ChemData_Sec2.dat'
 six_hours = 'D:\\Projects\\magma-multigas\\input\\TANG_RTU_Data_6Hr.dat'
@@ -71,13 +71,13 @@ All files would be saved into `<your project directory>/output/<file_type>`. You
 
 ---
 
-As we know, we only have 4 type of data at the moment.
+For now, this package only support 4 type of data.
 1. `two_seconds`
 2. `six_hours`
 3. `one_minute`
 4. `zero`
 
-To working on specific dataset, we can do it like this. To choose `two_secons` data:
+To working on specific dataset, we can do it like this. To choose `two_seconds` data:
 ```python
 two_seconds_data = multigas.two_seconds
 ```
@@ -86,17 +86,17 @@ or:
 two_seconds_data = multigas.select('two_seconds').get()
 ```
 
-You can change the `two_seconds` parameter with the available options above.
+Both method will result the same. You can change the `two_seconds` parameter with the available type of data.
 
 ## Data Preview
 
 ---
 
-After we select the data, we can do a quick view by typing this code:
+After selecting, we can do a quick review by calling `df` parameter:
 ```python
 two_seconds_data.df
 ```
-For anyone not familiar with `df` abbreviation, it is stand for _dataframe_. Just imagine it as an excel with header, but it is in python.
+For anyone not familiar with `df` abbreviation, it's stand for _dataframe_. Just imagine it as an excel with header, but it is in python.
 
 ![df-review.png](https://github.com/martanto/magma-multigas/blob/master/images/df-review.png?raw=true)
 
@@ -108,7 +108,7 @@ It will show all the columns name:
 ![columns.png](https://github.com/martanto/magma-multigas/blob/master/images/columns.png?raw=true)
 
 ## Filtering
-We can do fluent filtering data by using this code below. And it also support chaining filtering.  
+We can do fluent filtering data by using this code below. And it also supports chaining filtering.  
 ```python
 filtered_two_seconds = (two_seconds_data
                         .select_columns(column_names=['H2O','CO2','SO2','H2S','S_total'])
@@ -119,7 +119,7 @@ filtered_two_seconds = (two_seconds_data
                        )
 ```
 We can read the above code as is:
-> By using `two_seconds_data`, I want to select specific columns, such as: `H2O, CO2, SO2, S_Total` where the `Status_Flag` should have a `0` value. And the `SO2` columns must be between `-0.129` and `-0.127`. In addition I also want to filter `H2O` values between `-260` and `-228`.
+> By using `two_seconds_data`, let's select specific columns, such as: `H2O, CO2, SO2, S_Total` where the `Status_Flag` should have a `0` value. And the `SO2` columns must be between `-0.129` and `-0.127`. In addition `H2O` values would be filtered between `-260` and `-228`.
 
 To see the results, please run the `get()` method:
 ```python
@@ -138,12 +138,12 @@ filtered_two_seconds.count()
 
 ---
 
-And we can save it, using `save_as()` method:
+We can save it, using `save_as()` method. You can change the `file_type` parameter between `excel`,`xls`,`xlsx`, or `csv`.
 ```python
 filtered_two_seconds.save_as(file_type='excel')
 ```
 
-You will get the information where your file is saved. By default, it should be in your `output` directory. Here is the example of the output:
+You will get the information where your file is saved. By default, it should be in your `output\<file_type>` directory. Here is the example of the output:
 ```markdown
 ✅ Data saved to: D:\Projects\magma-multigas\output\excel\two_seconds_2024-06-16_2024-06-16_TANG_RTU_ChemData_Sec2.xlsx
 ```
@@ -152,7 +152,7 @@ You will get the information where your file is saved. By default, it should be 
 
 ---
 
-This package provide some basic functionality to plot some data. For the simplicity, we will use `six_hours` data as an example. We will do all the basic things above, from load, selecting, and filtering.
+This package provide some basic functionality to plot some data. For the simplicity, we will use `six_hours` data as an example. We will do all the basic things above, from extracting, selecting, and filtering.
 
 #### Selecting Six Hours
 ```python
