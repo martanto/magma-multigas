@@ -9,7 +9,6 @@ from .validator import (
 )
 
 from typing import List, Dict, Any, Self
-from datetime import timedelta, datetime
 
 
 def intersection(list_one: List[Any], list_two: List[Any]) -> List[Any]:
@@ -24,6 +23,19 @@ def intersection(list_one: List[Any], list_two: List[Any]) -> List[Any]:
     """
     intersect_list: List[Any] = [value for value in list_one if value in list_two]
     return intersect_list
+
+
+def unique(list_one: List[Any], list_two: List[Any]) -> List[Any]:
+    """Get unique elements from two lists
+
+    Args:
+        list_one (List[Any]): First List
+        list_two (List[Any]): Second List
+
+    Returns:
+        List[Any]: Unique elements
+    """
+    return list(set(list_one + list_two))
 
 
 class Query:
@@ -44,6 +56,17 @@ class Query:
         self.end_date: str = df.index[-1].strftime('%Y-%m-%d')
         self.start_datetime: pd.Timestamp = pd.Timestamp(df.index[0])
         self.end_datetime: pd.Timestamp = pd.Timestamp(df.index[-1])
+
+    def refresh(self) -> Self:
+        """Refresh dataframe with the original one"""
+        df = self.df_original.copy(deep=True)
+        self.df = df
+        self.columns_selected = []
+        self.start_date: str = df.index[0].strftime('%Y-%m-%d')
+        self.end_date: str = df.index[-1].strftime('%Y-%m-%d')
+        self.start_datetime: pd.Timestamp = pd.Timestamp(df.index[0])
+        self.end_datetime: pd.Timestamp = pd.Timestamp(df.index[-1])
+        return self
 
     def translate_comparator(self, column_name: str, comparator: str, value: Any) -> pd.DataFrame:
         """Translate comparator
@@ -86,12 +109,6 @@ class Query:
             bool: True if data is filtered
         """
         return False if self.df_original.equals(self.df) else True
-
-    def refresh(self) -> Self:
-        """Refresh dataframe with the original one"""
-        self.df = self.df_original.copy()
-        self.columns_selected = []
-        return self
 
     def column_has_nan(self, column_name: str) -> bool:
         """Check if column has NULL or NaN value.
@@ -159,7 +176,17 @@ class Query:
         """
         return len(self.get())
 
-    def select_columns(self, column_names: str | List[str] = None, numeric_only: bool = False) -> Self:
+    def reset_columns(self) -> Self:
+        """Reset selected columns
+
+        Returns:
+            Self: self
+        """
+        self.columns_selected: List[str] = []
+        return self
+
+    def select_columns(self, column_names: str | List[str] = None,
+                       numeric_only: bool = False) -> Self:
         """Select columns
 
         Args:
@@ -220,7 +247,7 @@ class Query:
         numeric_columns = intersection(column_names, numeric_columns)
 
         if len(numeric_columns) == 0:
-            print("⚠️ No numeric column(s) found in your selected columns: {}". format(column_names))
+            print("⚠️ No numeric column(s) found in your selected columns: {}".format(column_names))
 
         self.columns_selected = numeric_columns
         return self
