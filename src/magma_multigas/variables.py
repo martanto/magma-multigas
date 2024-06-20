@@ -11,7 +11,7 @@ plot_properties: dict[str, dict[str, str]] = {
     },
     'Avg_SO2': {
         'label': 'Average SO2',
-        'color': '#B00020',
+        'color': '#8BC34A',
         'marker': '*',
     },
     'Avg_CO2_H2S_ratio': {

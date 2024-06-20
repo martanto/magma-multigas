@@ -140,15 +140,27 @@ class Plot:
         y_min = df['Avg_CO2_lowpass'].min() if y_min is None else y_min
         y_max = df['Avg_CO2_lowpass'].max() * y_max_multiplier if y_max is None else y_max
 
-        ax.plot(df.index, df['Avg_CO2_lowpass'], color='#039BE5',
-                linestyle='--', marker='D', label='Average CO2 Lowpass')
+        ax.plot(df.index, df['Avg_CO2_lowpass'],
+                color=plot_properties['Avg_CO2_lowpass']['color'],
+                marker=plot_properties['Avg_CO2_lowpass']['marker'],
+                label=plot_properties['Avg_CO2_lowpass']['label'],
+                linestyle='--')
+
         ax.set_xlim(date2num(self.start_date), date2num(self.end_date))
         ax.set_ylim(y_min, y_max)
         ax.legend(loc=2, fontsize=8)
 
         ax_right = ax.twinx()
-        ax_right.plot(df.index, df['Avg_H2S'], color='#F44336', marker='^', label='Average H2S')
-        ax_right.plot(df.index, df['Avg_SO2'], color='#8BC34A', marker='*', label='Average SO2', )
+        ax_right.plot(df.index, df['Avg_H2S'],
+                      color=plot_properties['Avg_H2S']['color'],
+                      marker=plot_properties['Avg_H2S']['marker'],
+                      label=plot_properties['Avg_H2S']['label'])
+
+        ax_right.plot(df.index, df['Avg_SO2'],
+                      color=plot_properties['Avg_SO2']['color'],
+                      marker=plot_properties['Avg_SO2']['marker'],
+                      label=plot_properties['Avg_SO2']['label'])
+
         ax_right.legend(loc=1, fontsize=8)
 
         ax.grid(True, which='both', linestyle='--', alpha=1)
