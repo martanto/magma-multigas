@@ -1,8 +1,7 @@
 from .multigas_data import MultiGasData
 from .plot import Plot
 from .validator import validate_selected_data, validate_file_type
-from typing import Self
-
+from typing import Dict, Self
 
 types = ('two_seconds', 'six_hours', 'one_minute', 'zero', 'span')
 
@@ -40,8 +39,17 @@ class MultiGas:
                  span: str = None,
                  overwrite: bool = False,
                  default: str = 'six_hours'):
+
         if overwrite is True:
             print(f"⚠️ Existing data will be overwritten.")
+
+        self.files: Dict[str, str] = {
+            'two_seconds': two_seconds,
+            'six_hours': six_hours,
+            'one_minute': one_minute,
+            'zero': zero,
+            'span': span
+        }
 
         self.two_seconds: MultiGasData = MultiGasData('two_seconds', two_seconds, force=overwrite)
         self.six_hours: MultiGasData = MultiGasData('six_hours', six_hours, force=overwrite)
@@ -54,6 +62,11 @@ class MultiGas:
 
         print(f'ℹ️ DEFAULT selected: {default}')
         self.selected: MultiGasData = self.get(default)
+
+    def __repr__(self) -> str:
+        """Class representative"""
+        return (f"{type(self).__name__}(two_seconds={type(self.two_seconds)}, six_hours={type(self.six_hours)}, "
+                f"one_minute={type(self.one_minute)}, zero={type(self.zero)}, span={type(self.span)})")
 
     @str
     def info(self):

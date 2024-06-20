@@ -33,7 +33,32 @@ class MultiGasData(Query):
         self.type_of_data: str = type_of_data
 
         super().__init__(self.set_df())
-        print(f"📅 {type_of_data} available from {self.start_datetime} to {self.end_datetime}")
+        print(f"📅 {type_of_data} available from: {self.start_datetime} to {self.end_datetime}")
+
+    def __str__(self) -> str:
+        """Return type of multigas data"""
+        return self.type_of_data
+
+    def __getattr__(self, column_name: str) -> pd.DataFrame:
+        """Get dataframe, when columns is not available"""
+        return self.df_original[column_name]
+
+    def __repr__(self) -> str:
+        """Class representative"""
+        return self.describe()
+
+    def describe(self) -> str:
+        """Describe class"""
+        return (f"{type(self).__name__}(type_of_data={self.type_of_data}, length={self.count()}, "
+                f"start_date={self.start_datetime}, end_date={self.end_datetime})")
+
+    def data(self) -> pd.DataFrame:
+        """Alias for df
+
+        Returns:
+            pd.DataFrame
+        """
+        return self.df
 
     def replace_nan(self, csv: str) -> str:
         """Replacing 'NAN' value with np.NaN
