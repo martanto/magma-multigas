@@ -40,6 +40,9 @@ class MultiGas:
                  span: str = None,
                  overwrite: bool = False,
                  default: str = 'six_hours'):
+        if overwrite is True:
+            print(f"⚠️ Existing data will be overwritten.")
+
         self.two_seconds: MultiGasData = MultiGasData('two_seconds', two_seconds, force=overwrite)
         self.six_hours: MultiGasData = MultiGasData('six_hours', six_hours, force=overwrite)
         self.one_minute: MultiGasData = MultiGasData('one_minute', one_minute, force=overwrite)
@@ -48,9 +51,9 @@ class MultiGas:
             if span is not None else None
 
         self.data_selected: str = default
-        self.selected: MultiGasData = self.get(default)
 
         print(f'ℹ️ DEFAULT selected: {default}')
+        self.selected: MultiGasData = self.get(default)
 
     @str
     def info(self):
