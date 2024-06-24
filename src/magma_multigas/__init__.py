@@ -4,6 +4,7 @@
 from magma_multigas.multigas import MultiGas
 from magma_multigas.multigas_data import MultiGasData
 from magma_multigas.diagnose import Diagnose
+from magma_multigas.diagnose import Query
 from magma_multigas.resources import columns_description
 from magma_multigas.validator import STATUSES
 
@@ -20,6 +21,7 @@ __all__ = [
     "MultiGas",
     "MultiGasData",
     "Diagnose",
+    "Query",
     "columns_description",
     "STATUSES",
 ]
