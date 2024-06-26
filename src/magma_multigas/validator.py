@@ -1,3 +1,5 @@
+import pandas as pd
+
 from typing import Tuple, List, Any
 from datetime import date, datetime
 
@@ -157,6 +159,20 @@ def validate_datetime(datetime_str: str) -> bool | Exception:
     except ValueError:
         raise ValueError("⛔ Incorrect date time format, should be "
                          "yyyy-mm-dd or yyyy-mm-dd HH:MM:SS")
+
+
+def validate_index_as_datetime(df: pd.DataFrame) -> bool | Exception:
+    """Validating index as pd.DatetimeIndex.
+
+    Args:
+        df (pd.DataFrame): Dataframe.
+
+    Returns:
+        True or raise an Exception.
+    """
+    if isinstance(df.index, pd.DatetimeIndex):
+        return True
+    raise ValueError('⛔ Index is not valid pd.DatetimeIndex')
 
 
 def validate_mutligas_data_type(mutligas_data_type: str) -> bool | Exception:
