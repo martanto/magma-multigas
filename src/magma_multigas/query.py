@@ -6,9 +6,16 @@ from .validator import (
     validate_column_name,
     validate_comparator,
     validate_datetime,
+    validate_index_as_datetime,
 )
 
-from typing import List, Dict, Any, Self
+from typing import (
+    List,
+    Dict,
+    Any,
+    Self,
+    Tuple,
+)
 
 
 def intersection(list_one: List[Any], list_two: List[Any]) -> List[Any]:
@@ -39,7 +46,7 @@ def unique(list_one: List[Any], list_two: List[Any]) -> List[Any]:
 
 
 class Query:
-    def __init__(self, df: pd.DataFrame):
+    def __init__(self, df: pd.DataFrame, datetime_columns: str = None):
         """Query data
 
         Args:
@@ -48,24 +55,30 @@ class Query:
         Attributes:
             df (pd.DataFrame): data frame
         """
+        if datetime_columns is not None:
+            df.set_index(datetime_columns, inplace=True)
+
         self.df_original: pd.DataFrame = df
         self.df: pd.DataFrame = df.copy(deep=True)
         self.columns: List[str] = self.df_original.columns.tolist()
         self.columns_selected: List[str] = []
-        self.start_date: str = df.index[0].strftime('%Y-%m-%d')
-        self.end_date: str = df.index[-1].strftime('%Y-%m-%d')
-        self.start_datetime: pd.Timestamp = pd.Timestamp(df.index[0])
-        self.end_datetime: pd.Timestamp = pd.Timestamp(df.index[-1])
+        self.start_date, self.start_datetime = self._datetime(df)
+        self.end_date, self.end_datetime = self._datetime(df, -1)
+
+    def _datetime(self, df: pd.DataFrame, index: int = 0) -> Tuple[str, pd.Timestamp] | Tuple[str, Any]:
+        pd_index = df.index[index]
+        if isinstance(df.index, pd.DatetimeIndex):
+            return pd_index.strftime('%Y-%m-%d'), pd.Timestamp(pd_index)
+
+        return str(pd_index), pd_index
 
     def refresh(self) -> Self:
         """Refresh dataframe with the original one"""
         df = self.df_original.copy(deep=True)
         self.df = df
         self.columns_selected = []
-        self.start_date: str = df.index[0].strftime('%Y-%m-%d')
-        self.end_date: str = df.index[-1].strftime('%Y-%m-%d')
-        self.start_datetime: pd.Timestamp = pd.Timestamp(df.index[0])
-        self.end_datetime: pd.Timestamp = pd.Timestamp(df.index[-1])
+        self.start_date, self.start_datetime = self._datetime(df)
+        self.end_date, self.end_datetime = self._datetime(df, -1)
         return self
 
     def translate_comparator(self, column_name: str, comparator: str, value: Any) -> pd.DataFrame:
@@ -294,7 +307,8 @@ class Query:
         self.df = self.df.loc[date_str]
         return self
 
-    def where_values_between(self, column_name: str, start_value: int | float, end_value: int | float) -> Self:
+    def where_values_between(self, column_name: str, start_value: int | float,
+                             end_value: int | float) -> Self:
         """Filter data based on two values in specified column
 
         Args:
@@ -322,6 +336,7 @@ class Query:
         Returns:
             self (Self)
         """
+        validate_index_as_datetime(self.df)
         validate_datetime(start_date)
         validate_datetime(end_date)
 
