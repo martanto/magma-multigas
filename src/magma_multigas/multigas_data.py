@@ -19,7 +19,7 @@ def start_and_end_date(df: pd.DataFrame = None) -> Tuple[str, str]:
 
 
 class MultiGasData(Query):
-    def __init__(self, type_of_data: str, csv_file: str, force: bool = False):
+    def __init__(self, type_of_data: str, csv_file: str, force: bool = False, index_col: str = None):
         """Data of MultiGas
         """
         self.current_dir = os.getcwd()
@@ -27,12 +27,13 @@ class MultiGasData(Query):
         os.makedirs(output_dir, exist_ok=True)
 
         self.force = force
+        self.index_col = index_col if index_col is not None else 'TIMESTAMP'
         self.output_dir = output_dir
         self.csv_file: str = self.replace_nan(csv_file)
         self.filename: str = Path(self.csv_file).stem
         self.type_of_data: str = type_of_data
 
-        super().__init__(self.set_df())
+        super().__init__(self.set_df(csv_file=self.csv_file, index_col=index_col))
         print(f"📅 {type_of_data} available from: {self.start_datetime} to {self.end_datetime}")
 
     def __str__(self) -> str:
@@ -178,23 +179,23 @@ class MultiGasData(Query):
         print(f'⚠️ Data {self.filename} is empty. Skip.')
         return None
 
-    def plot(self, y_min: float = None, y_max: float = None,
-             width: int = 12, height: int = 4) -> Plot:
+    def plot(self, width: int = 12, height: int = 4,
+             y_max_multiplier: float = 1.0, margins: float = 0.05) -> Plot:
         """Plot selected data and columns.
 
         Args:
-            y_min (float): Minimum value
-            y_max (float): Maximum value
-            width (int): Figure width
-            height (int): Figure height
+            width (int, optional): Width of the plot. Defaults to 12.
+            height (int, optional): Height of the plot or column. Defaults to 4.
+            y_max_multiplier (float, optional): Maximum multiplier for the y-axis. Defaults to 1.0.
+            margins (float, optional): Margin of the plot. Defaults to 0.05
 
         Returns:
-            save_path (str): Path to save plot
+            Plot class
         """
         return Plot(
             df=self.get(),
-            y_min=y_min,
-            y_max=y_max,
             width=width,
             height=height,
+            y_max_multiplier=y_max_multiplier,
+            margins=margins
         )

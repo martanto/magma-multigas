@@ -123,28 +123,27 @@ class MultiGas:
         print("List of columns for {} data".format(self.data_selected))
         return self.selected.columns
 
-    def plot(self, y_min: float = None, y_max: float = None, y_max_multiplier: float = 1,
-             width: int = 12, height: int = 4) -> Plot:
+    def plot(self, width: int = 12, height: int = 4,
+             y_max_multiplier: float = 1.0, margins: float = 0.05) -> Plot:
         """Plot selected data and columns.
 
         Args:
-            y_min (float): Minimum value
-            y_max (float): Maximum value
-            y_max_multiplier (float): Multiplier factor
-            width (int): Figure width
-            height (int): Figure height
+            width (int, optional): Width of the plot. Defaults to 12.
+            height (int, optional): Height of the plot or column. Defaults to 4.
+            y_max_multiplier (float, optional): Maximum multiplier for the y-axis. Defaults to 1.0.
+            margins (float, optional): Margin of the plot. Defaults to 0.05
 
         Returns:
-            save_path (str): Path to save plot
+            Plot class
         """
         print("Data selected to plot: {}".format(self.data_selected))
 
         return Plot(
             df=self.selected.df,
-            y_min=y_min,
-            y_max=y_max,
             width=width,
             height=height,
+            y_max_multiplier=y_max_multiplier,
+            margins=margins
         )
 
     def get(self, type_of_data: str = None) -> MultiGasData:

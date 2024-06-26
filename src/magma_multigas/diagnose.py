@@ -1,10 +1,10 @@
-from typing import List, Self
-
 import pandas as pd
 
 from .multigas_data import MultiGasData
 from .query import Query, unique
 from .validator import validate_mutligas_data_type, validate_column_name
+from typing import Dict, List, Self
+
 
 COLUMNS: List[str] = [
     'Licor_volts',
@@ -42,7 +42,7 @@ class Diagnose(Query):
 
     def __getattr__(self, column_name: str) -> pd.DataFrame:
         """Get dataframe, when columns is not available"""
-        return self.df_original[column_name]
+        return self.get()[column_name]
 
     def describe(self) -> str:
         """Describe class"""
@@ -73,7 +73,73 @@ class Diagnose(Query):
         Returns:
             List[str]: columns with missing values
         """
-        return self.missing_values.index.to_list()
+        return self.missing_values['column'].to_list()
+
+    @property
+    def availability(self) -> pd.DataFrame:
+        df = self.get()
+        length = len(df)
+        total_empty_values = df.isna().sum().to_list()
+
+        series: pd.Series = df.isna().any()
+        series.index.name = 'column'
+        series.name = 'contain_empty_data'
+
+        new_df = pd.DataFrame(series)
+
+        new_df['total_data_missing'] = total_empty_values
+        new_df['missing_percentage'] = (new_df['total_data_missing'] / length) * 100
+        new_df['total_data_available'] = length - new_df['total_data_missing']
+        new_df['completeness_percentage'] = (new_df['total_data_available'] / length) * 100
+        new_df = new_df.sort_values('column', ascending=True)
+        new_df.reset_index(inplace=True)
+
+        return new_df
+
+    @property
+    def completeness(self) -> pd.DataFrame:
+        """Return completeness of data.
+
+        Returns:
+            pd.DataFrame: completeness of data
+        """
+        df = self.availability[
+            ['column',
+             'total_data_available',
+             'completeness_percentage']
+        ]
+
+        return df
+
+    def completeness_minimum(self, minimum: float) -> pd.DataFrame:
+        """Return dataframe with minimum completeness value
+
+        Args:
+            minimum (float): minimum completeness value
+
+        Returns:
+            pd.DataFrame: dataframe with minimum completeness value
+        """
+        df = self.completeness
+        df = (df[df['completeness_percentage'] > minimum]
+              .sort_values('completeness_percentage', ascending=False))
+
+        return df
+
+    def completeness_maximum(self, maximum: float) -> pd.DataFrame:
+        """Return dataframe with maximum completeness value
+
+        Args:
+            maximum (float): maximum completeness value
+
+        Returns:
+            pd.DataFrame: dataframe with maximum completeness value
+        """
+        df = self.completeness
+        df = (df[df['completeness_percentage'] < maximum]
+              .sort_values('completeness_percentage', ascending=False))
+
+        return df
 
     @property
     def missing_values(self) -> pd.DataFrame:
@@ -82,44 +148,33 @@ class Diagnose(Query):
         Returns:
             pd.DataFrame: dataframe with missing values
         """
+        df = self.availability[
+            ['column',
+             'total_data_missing',
+             'missing_percentage']
+        ]
+
+        return df
+
+    def null_percentage(self, as_dict: bool = False) -> pd.DataFrame | Dict[str, float]:
+        """Get null percentage of data
+
+        Args:
+            as_dict (bool, optional): if True, return dict with null percentage
+
+        Returns:
+            pd.DataFrame: dataframe with null percentage
+            Dict[str, float]: dict with null percentage
+        """
+        null_dict: Dict[str, float] = {}
         df = self.get()
-        length = len(df)
+        columns = df.columns.sort_values(ascending=True)
+        for column in columns:
+            null_rate = df[column].isnull().sum() / len(df) * 100
+            if null_rate > 0:
+                null_dict[column] = null_rate
 
-        series: pd.Series = df.isna().any()
-        series.index.name = 'columns'
-        series.name = 'contain_empty_data'
+        if as_dict is True:
+            return null_dict
 
-        new_df = pd.DataFrame(series)
-        new_df['total_missing_values'] = df.isna().sum().to_list()
-        new_df['completeness'] = (length-new_df['total_missing_values'])/length*100
-        new_df = new_df[new_df['contain_empty_data'] == True].sort_values('completeness', ascending=False)
-
-        return new_df
-
-    def minimum_completeness(self, completeness: float) -> pd.DataFrame:
-        """Return dataframe with minimum completeness value
-
-        Args:
-            completeness (float): minimum completeness value
-
-        Returns:
-            pd.DataFrame: dataframe with minimum completeness value
-        """
-        df = self.missing_values
-        df = df[df['completeness'] > completeness].sort_values('completeness', ascending=False)
-
-        return df
-
-    def maximum_completeness(self, completeness: float) -> pd.DataFrame:
-        """Return dataframe with maximum completeness value
-
-        Args:
-            completeness (float): maximum completeness value
-
-        Returns:
-            pd.DataFrame: dataframe with maximum completeness value
-        """
-        df = self.missing_values
-        df = df[df['completeness'] < completeness].sort_values('completeness', ascending=False)
-
-        return df
+        return pd.DataFrame(null_dict.items(), columns=['column', 'null_percentage'])
