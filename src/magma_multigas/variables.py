@@ -35,7 +35,7 @@ plot_properties: dict[str, dict[str, str]] = {
         'marker': 'o',
     },
     'Avg_CO2_S_tot_ratio': {
-        'label': 'Average CO2/Stotal Ratio',
+        'label': 'Average CO2/S_Total Ratio',
         'color': '#006064',
         'marker': 'o',
     },
