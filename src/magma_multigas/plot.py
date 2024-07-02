@@ -9,9 +9,7 @@ from .validator import validate_column_name
 from matplotlib import pyplot as plt
 from matplotlib.dates import date2num
 from datetime import datetime
-from typing import List, Self
-
-sns.set_style("whitegrid")
+from typing import Any, Dict, List, Self
 
 
 def default_filename(prefix: str = None, suffix: str = None) -> str:
@@ -24,7 +22,7 @@ def default_filename(prefix: str = None, suffix: str = None) -> str:
     Returns:
         str: A unique filename.
     """
-    prefix = 'plot' if suffix is None else suffix
+    prefix = 'plot' if prefix is None else prefix
 
     suffix = '' if suffix is None else suffix
 
@@ -42,8 +40,9 @@ def default_filename(prefix: str = None, suffix: str = None) -> str:
 
 class Plot:
     def __init__(self, df: pd.DataFrame = None, width: int = 12, height: int = 4,
-                 y_max_multiplier: float = 1.0, datetime_column: str = 'TIMESTAMP',
-                 margins: float = 0.05):
+                 y_max_multiplier: float = 1.0, filename: str = None,
+                 datetime_column: str = 'TIMESTAMP',
+                 margins: float = 0.05, style="whitegrid"):
         """Plot data from dataframe.
 
         Args:
@@ -53,7 +52,10 @@ class Plot:
             y_max_multiplier (float, optional): Maximum y-axis multiplier. Defaults to 1.0.
             datetime_column (str, optional): A column name containing the datetime. Defaults to 'TIMESTAMP'.
             margins (float, optional): Margin of the plot. Defaults to 0.05.
+            style (str, optional): Style of the plot. Defaults to "whitegrid".
         """
+        sns.set_style(style)
+
         self.df_original = df.copy()
         self.df = df
 
@@ -76,7 +78,7 @@ class Plot:
         os.makedirs(figures_dir, exist_ok=True)
 
         self.y_max_multiplier: float = y_max_multiplier
-        self.filename: str = default_filename()
+        self.filename: str = filename
         self.figures_dir = figures_dir
 
     @property
@@ -181,10 +183,10 @@ class Plot:
         # Left axes
         ax_left = ax
         ax_left.plot(df.index, df['Avg_CO2_lowpass'],
-                color=plot_properties['Avg_CO2_lowpass']['color'],
-                marker=plot_properties['Avg_CO2_lowpass']['marker'],
-                label=plot_properties['Avg_CO2_lowpass']['label'],
-                linestyle='--')
+                     color=plot_properties['Avg_CO2_lowpass']['color'],
+                     marker=plot_properties['Avg_CO2_lowpass']['marker'],
+                     label=plot_properties['Avg_CO2_lowpass']['label'],
+                     linestyle='--')
 
         ax_left.legend(loc=2, fontsize=8)
         ax_left.set_xlim(date2num(self.start_date), date2num(self.end_date))
@@ -221,7 +223,6 @@ class Plot:
                          y_right_min: float = None, y_right_max: float = None,
                          plot_as_individual: bool = False,
                          space_between_plot: float = None,
-                         filename: str = None,
                          y_max_multiplier: float = None) -> Self:
         """Plot Average CO2, SO2, and H2S using six hours of data.
 
@@ -232,7 +233,6 @@ class Plot:
             y_right_max (float): Maximum value for the right y-axis of the plot.
             plot_as_individual (bool): plot would be saved individually
             space_between_plot (float): space between plot
-            filename (str): filename to save the figure.
             y_max_multiplier (float): Max multiplier. Default is 1.0
 
         Returns:
@@ -240,9 +240,9 @@ class Plot:
         """
         df = self.df.copy()
 
-        if filename is None:
-            filename = ('{}_{}_co2_so2_h2s_concentration'
-                        .format(self.start_date_str, self.end_date_str))
+        if self.filename is None:
+            self.filename = ('{}_{}_co2_so2_h2s_concentration'
+                             .format(self.start_date_str, self.end_date_str))
 
         if y_max_multiplier is not None:
             self.y_max_multiplier = y_max_multiplier
@@ -256,25 +256,10 @@ class Plot:
             self.plot_columns(df=df,
                               columns=columns,
                               plot_type='plot',
-                              filename=filename,
                               title=title,
                               space_between_plot=space_between_plot,
                               y_max_multiplier=y_max_multiplier,
                               plot_regression=False)
-
-            # figsize = (self.width, self.height * len(columns))
-            # fig, axs = plt.subplots(nrows=len(columns), ncols=1,
-            #                         figsize=figsize, sharex=True)
-            # fig.suptitle("6 Hours Average\n $CO_{2}$ - $H_{2}S$ - "
-            #              "$SO_{2}$ Concentration (ppm)")
-            #
-            # for index, column in enumerate(columns):
-            #     ax = self._ax_plot(df=df, ax=axs[index], column=column)
-            #     if df[column].sum() > 0:
-            #         ax = self._set_y_limit(ax=ax, df=df, column=column, y_min=y_left_min, y_max=y_left_max)
-            #
-            # if space_between_plot is not None:
-            #     plt.subplots_adjust(hspace=space_between_plot)
 
         else:
             fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(self.width, self.height))
@@ -287,12 +272,9 @@ class Plot:
 
         self.df = df
 
-        print(f"✅ Figure saved to: {filename} ")
-
         return self
 
     def plot_gas_ratio(self, plot_type: str = 'scatter',
-                       filename: str = None,
                        space_between_plot: float = None,
                        y_max_multiplier: float = None,
                        plot_regression: bool = False) -> Self:
@@ -301,7 +283,6 @@ class Plot:
 
         Args:
             plot_type (str): Plot type. Choose between 'scatter' or 'plot'.
-            filename (str, optional): filename to save the figure.
             space_between_plot (float, optional): space between plot
             y_max_multiplier (float, optional): Max multiplier. Default is 1.0
             plot_regression (bool, optional): Plot regression.
@@ -314,13 +295,12 @@ class Plot:
         columns = ['Avg_CO2_H2S_ratio', 'Avg_H2O_CO2_ratio', 'Avg_H2S_SO2_ratio',
                    'Avg_CO2_SO2_ratio', 'Avg_CO2_S_tot_ratio']
 
-        if filename is None:
-            filename = '{}_{}_{}'.format(self.start_date_str,
-                                         self.end_date_str, '_'.join(columns))
+        if self.filename is None:
+            self.filename = '{}_{}_{}'.format(self.start_date_str,
+                                              self.end_date_str, '_'.join(columns))
 
         self.plot_columns(df=df,
                           columns=columns, plot_type=plot_type,
-                          filename=filename,
                           space_between_plot=space_between_plot,
                           y_max_multiplier=y_max_multiplier,
                           plot_regression=plot_regression)
@@ -359,6 +339,137 @@ class Plot:
 
         return ax
 
+    def _set_df_for_two_columns(self, x:  str, y: str, df: pd.DataFrame = None) -> pd.DataFrame:
+        """Resetting index column to x columns.
+
+        Args:
+            x (str): X-column name
+            y (str): Y-column name
+            df (pd.DataFrame, optional): Dataframe
+
+        Returns:
+            pd.DataFrame
+        """
+        if df is None:
+            df = self.df.copy()
+
+        df = df[[x, y]]
+        df = df[(df[x] > 0) & (df[y] > 0)]
+        df = df.reset_index()
+
+        return df
+
+    def _set_datetime_for_title(self, df: pd.DataFrame) -> str:
+        _start_date = df[self.datetime_column].iloc[0].strftime('%d %b %Y, %H:%M:%S')
+        _end_date = df[self.datetime_column].iloc[-1].strftime('%d %b %Y, %H:%M:%S')
+        return f"{_start_date} - {_end_date} UTC"
+
+    def plot_density(self, x: str, y: str, df: pd.DataFrame = None,
+                     kind: str = 'scatter', title: str = None, kwargs: Dict[str, Any] = None) -> Self:
+        """Plot density of two columns.
+
+        Args:
+            x (str): Column name for X axes
+            y (str): Column name for Y axes
+            df (pd.DataFrame, optional): Dataframe
+            kind (str, optional). Possible value: 'scatter' (default), 'hex', 'kde', 'hist', 'reg'
+            title (str, optional). Title for saved plot
+            kwargs (dict): Keyword arguments for seaborn.
+
+        Returns:
+            Self
+        """
+
+        if kwargs is None:
+            kwargs = {}
+
+        if (kind == 'scatter') and (kwargs is not None):
+            if ('s' not in kwargs.keys()) and ('size' not in kwargs.keys()):
+                print('s gak ada')
+                kwargs['s'] = 100
+
+        df = self._set_df_for_two_columns(x=x, y=y, df=df)
+
+        density_plot_style = ['scatter', 'hex', 'kde', 'hist', 'reg']
+
+        if kind not in density_plot_style:
+            raise ValueError(f"⚠️ Kind must be one of {density_plot_style}")
+
+        filename = default_filename(prefix=f'plot_density_{x}_{y}')
+
+        if title is None:
+            _datetime = self._set_datetime_for_title(df)
+            title = f"{y}/{x}\n{_datetime}"
+
+        p = sns.jointplot(x=df[x], y=df[y], kind=kind, **kwargs)
+        fig = p.fig
+        fig.suptitle(title, fontsize=12)
+        fig.tight_layout()
+
+        self.save(fig=fig, filename=filename)
+
+        return self
+
+    def plot_correlogram(self, columns: List[str], df: pd.DataFrame = None, kind: str = 'scatter',
+                         plot_regression: bool = False, title: str = None, kwargs: Dict[str, Any] = None,
+                         plot_kws: Dict[str, Any] = None) -> Self:
+        """Plot correlation between columns.
+
+        Args:
+            columns (list[str]): columns name to be plotted
+            df (pd.DataFrame, optional): Dataframe.
+            kind (str, optional): possible kinds are ‘scatter’ (default), ‘kde’, ‘hist’, ‘reg’
+            plot_regression (bool, optional): plot as regression. Default False
+            title  (str, optional): Plot title
+            kwargs (Dict[str, Any], optional): key values argument. Default None
+            plot_kws (Dict[str, Any], optional): key values argumens for plot parameter
+        """
+
+        assert len(columns) > 1, f"⛔ At least two columns are required."
+        assert kind in ['scatter', 'kde', 'hist', 'reg'], f"⛔ Possible values are ‘scatter’, ‘kde’, ‘hist’, ‘reg’"
+
+        if df is None:
+            df = self.df.copy()
+
+        for column_name in columns:
+            validate_column_name(column_name=column_name, column_list=df.columns.tolist())
+
+        if kwargs is None:
+            kwargs = {}
+
+        if 'hue' in kwargs.keys():
+            columns.append(kwargs['hue'])
+
+        df = df[columns]
+        _datetime = self._set_datetime_for_title(df)
+
+        if title is None:
+            title = f"Correlogram Plot\n{_datetime}"
+
+        if plot_regression is True:
+            print(f"ℹ️ Change `kind` to `reg`, because plot_regression is set to True")
+            kind = 'reg'
+
+        p = sns.pairplot(df, kind=kind, plot_kws=plot_kws, **kwargs)
+        fig = p.fig
+        fig.suptitle(title, fontsize=12)
+        fig.tight_layout()
+
+        filename = default_filename(prefix=f'plot_correlogram_{len(columns)}_columns')
+
+        self.save(fig, filename)
+
+        return self
+
+    def plot_all_regression(self, df: pd.DataFrame, x: str, y: str, kwargs: Dict[str, Any] = None) -> Self:
+        return self
+
+    def plot_linear_regression(self, df: pd.DataFrame, x: str, y: str, kwargs: Dict[str, Any] = None) -> Self:
+        return self
+
+    def plot_polynomial(self, df: pd.DataFrame, x: str, y: str, order: int = 2, kwargs: Dict[str, Any] = None) -> Self:
+        return self
+
     def plot_columns(self, columns: str | list[str],
                      df: pd.DataFrame = None,
                      x_min: float = None,
@@ -368,11 +479,11 @@ class Plot:
                      y_max_multiplier: float = None,
                      plot_type: str = 'scatter',
                      title: str = None,
-                     filename: str = None,
                      space_between_plot=None,
                      plot_regression: bool = False,
+                     order: int = 1,
                      disable_regression_for: List[str] = None,
-                     validate_column: bool = True) -> pd.DataFrame:
+                     validate_column: bool = True) -> Self:
         """Plot for selected columns
 
         Args:
@@ -380,7 +491,6 @@ class Plot:
             columns (str | list[str]): Columns to plot
             plot_type (str): Plot type. Choose between 'scatter' or 'plot'.
             title (str, optional): Plot title.
-            filename (str): filename to save the figure.
             space_between_plot (float, optional): space between plot
             x_min (float, optional): Minimum x value. Defaults to None.
             x_max (float, optional): Maximum x value. Defaults to None.
@@ -388,6 +498,7 @@ class Plot:
             y_max (float, optional): Max. Maximum value. Defaults to None.
             y_max_multiplier (float): Max multiplier. Default is 1.0
             plot_regression (bool): Plot regression
+            order (int, optional): Order of regression. Default is 1.
             disable_regression_for (list[str]): List of columns disable regression
             validate_column (bbol): Validating column is exists or not
 
@@ -420,12 +531,14 @@ class Plot:
         if y_max_multiplier is not None:
             self.y_max_multiplier = y_max_multiplier
 
+        # Decide if gap between plot should be removed
         remove_gap: bool = True if space_between_plot == 0 else False
 
         figsize = (self.width, self.height * len(columns))
         fig, axs = plt.subplots(nrows=len(columns), ncols=1,
                                 figsize=figsize, sharex=True)
 
+        # Set title
         if title is not None:
             fig.suptitle(title)
 
@@ -436,7 +549,7 @@ class Plot:
                 else self._ax_plot(df=df, ax=ax, column=column)
 
             # Plot Regression
-            if (plot_regression is True) and (column not in disable_regression_for):
+            if (plot_regression is True) and (column not in disable_regression_for) and (order == 1):
                 ax.plot(df.index, y_prediction(df, column),
                         label=regression_function(df, column))
 
@@ -452,10 +565,11 @@ class Plot:
                     bbox=dict(facecolor='white', alpha=0.5)
                 )
 
-                # Removing 0 values if remove_gap is True
-                if remove_gap is True:
-                    ax.yaxis.get_major_ticks()[0].label1.set_visible(False)
+            # Removing 0 values if remove_gap is True
+            if remove_gap is True:
+                ax.yaxis.get_major_ticks()[0].label1.set_visible(False)
 
+            # Set X-limit
             if isinstance(df.index, pd.DatetimeIndex):
                 ax.set_xlim(date2num(self.start_date), date2num(self.end_date))
             else:
@@ -463,6 +577,7 @@ class Plot:
                 ax.set_ylabel(column)
                 ax = self._set_x_limit(ax=ax, df=df, x_min=x_min, x_max=x_max)
 
+            # Set Y-limit
             if df[column].sum() > 0:
                 ax = self._set_y_limit(ax=ax, df=df, column=column, y_min=y_min, y_max=y_max)
 
@@ -470,36 +585,39 @@ class Plot:
             ax.legend(loc='upper right', fontsize=10, ncol=4)
             ax.grid(True, which='both', linestyle='-.', alpha=1)
 
-        if remove_gap is False:
+        if space_between_plot is not None:
             plt.subplots_adjust(hspace=space_between_plot)
 
-        if filename is None:
-            filename = default_filename(prefix='plot_columns')
-
-        print(f"✅ Figure saved to: {filename} ")
+        if self.filename is None:
+            self.filename = default_filename(prefix='plot_columns')
 
         self.df = df
+        self.save(fig=fig, filename=self.filename)
 
-        return df
+        return self
 
     def plot_between_two_columns(self, x: str, y: str,
                                  x_min: float = None, x_max: float = None,
                                  y_min: float = None, y_max: float = None,
                                  df: pd.DataFrame = None,
-                                 filename: str = None,
-                                 plot_regression: bool = False) -> Self:
+                                 plot_regression: bool = False,
+                                 plot_density: bool = False,
+                                 kind: str = None,
+                                 kwargs=None) -> Self:
         """Plot between two selected columns.
 
         Args:
-            df (pd.DataFrame): DataFrame to plot
-            x (str): Column name
-            y (str): Column name
+            df (pd.DataFrame): DataFrame to plot.
+            x (str): Column name.
+            y (str): Column name.
             x_min (float, optional): Minimum x-value. Defaults to None.
             x_max (float, optional): Maximum x-value. Defaults to None.
             y_min (float, optional): Minimum y-value. Defaults to None.
             y_max (float, optional): Maximum y-value. Defaults to None.
-            filename (str): filename to save the figure.
             plot_regression (bool): Plot regression
+            plot_density (bool): Plot Kernel Density Estimate (KDE)
+            kind (str): Kind of plot. Choose between 'scatter' (default), 'hex', 'kde'.
+            kwargs (dict): Keyword arguments for seaborn.
 
         Returns:
             Plot class
@@ -516,15 +634,19 @@ class Plot:
                 raise ValueError(f"⛔ Column ['{column}'] is empty. "
                                  f"Please check colum value and change column {column}.")
 
-        df = df[[x, y]]
-        df = df[(df[x] > 0) & (df[y] > 0)]
-        df = df.reset_index().set_index(x)
+        if kwargs is None:
+            kwargs: Dict[str, Any] = {}
 
-        self.plot_columns(df=df, columns=y, x_min=x_min, x_max=x_min,
-                          y_min=y_min, y_max=y_max, filename=filename,
-                          plot_regression=plot_regression, validate_column=False)
+        df = self._set_df_for_two_columns(x=x, y=y, df=df)
 
-        return self
+        if plot_density is True:
+            return self.plot_density(df=df, x=x, y=y, kind=kind, **kwargs)
+
+        df = df.set_index(x)
+
+        return self.plot_columns(df=df, columns=y, x_min=x_min, x_max=x_max,
+                                 y_min=y_min, y_max=y_max, plot_regression=plot_regression,
+                                 validate_column=False)
 
     def save(self, fig: plt.Figure, filename: str) -> str:
         """Save figure to file.
@@ -539,4 +661,7 @@ class Plot:
         save_path = os.path.join(self.figures_dir, f"{filename}.png")
         fig.savefig(save_path, dpi=300)
 
+        print(f"🗃️ Figure saved to: {save_path}")
+
+        plt.show()
         return save_path

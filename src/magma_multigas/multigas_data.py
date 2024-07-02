@@ -179,16 +179,18 @@ class MultiGasData(Query):
         print(f'⚠️ Data {self.filename} is empty. Skip.')
         return None
 
-    def plot(self, width: int = 12, height: int = 4,
-             y_max_multiplier: float = 1.0, margins: float = 0.05) -> Plot:
+    def plot(self, width: int = 12, height: int = 4, y_max_multiplier: float = 1.0,
+             datetime_column: str = 'TIMESTAMP', margins: float = 0.05, style = "whitegrid") -> Plot:
         """Plot selected data and columns.
 
         Args:
             width (int, optional): Width of the plot. Defaults to 12.
             height (int, optional): Height of the plot or column. Defaults to 4.
+            datetime_column (str, optional): A column name containing the datetime. Defaults to 'TIMESTAMP'.
             y_max_multiplier (float, optional): Maximum multiplier for the y-axis. Defaults to 1.0.
             margins (float, optional): Margin of the plot. Defaults to 0.05
-
+            style (str, optional): Style of the plot. Defaults to "whitegrid".
+            
         Returns:
             Plot class
         """
@@ -196,6 +198,8 @@ class MultiGasData(Query):
             df=self.get(),
             width=width,
             height=height,
+            datetime_column=datetime_column,
             y_max_multiplier=y_max_multiplier,
-            margins=margins
+            margins=margins,
+            style=style
         )
