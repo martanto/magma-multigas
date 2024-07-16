@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 
+from pandas.api.types import is_numeric_dtype
 from .validator import (
     validate_status,
     validate_column_name,
@@ -62,6 +63,7 @@ class Query:
         self.df: pd.DataFrame = df.copy(deep=True)
         self.columns: List[str] = self.df_original.columns.tolist()
         self.columns_selected: List[str] = []
+        self.columns_numeric: List[str] = self.df.select_dtypes(include=np.number).keys().to_list()
         self.start_date, self.start_datetime = self._datetime(df)
         self.end_date, self.end_datetime = self._datetime(df, -1)
 
@@ -77,6 +79,7 @@ class Query:
         df = self.df_original.copy(deep=True)
         self.df = df
         self.columns_selected = []
+        self.columns_numeric: List[str] = self.df.select_dtypes(include=np.number).keys().to_list()
         self.start_date, self.start_datetime = self._datetime(df)
         self.end_date, self.end_datetime = self._datetime(df, -1)
         return self
@@ -159,25 +162,45 @@ class Query:
         validate_column_name(column_name, self.columns)
         return True if (self.df[column_name].sum() == 0) else False
 
-    def columns_are_empty(self, columns_name: str | List[str] = None) -> pd.Series:
+    def columns_are_empty(self, columns_name: str | List[str] = None, empty_only: bool = False) -> pd.Series:
         """Returnn ALL empty columns
 
         Args:
             columns_name (str, List[str]): columns name
+            empty_only (bool): show only empty columns
 
         Returns:
             Dict[str, bool]: all empty columns
         """
         empty_dict: Dict[str, bool] = {}
+        all_empty_dict: Dict[str, bool] = {}
+
+        columns_selected: int = len(self.columns_selected)
 
         if columns_name is None:
             columns_name = self.columns
 
+        if columns_selected > 0:
+            columns_name = self.columns_selected
+
         if isinstance(columns_name, str):
             columns_name: List[str] = [columns_name]
 
+        columns_name = intersection(columns_name, self.columns_numeric)
+
         for column_name in columns_name:
+            # Check column type and make sure it is numeric
+            if is_numeric_dtype(self.df[column_name]) is False:
+                continue
+            is_empty: bool = self.column_is_empty(column_name)
+
+            if empty_only is True and is_empty is True:
+                all_empty_dict[column_name]: bool = self.column_is_empty(column_name)
+
             empty_dict[column_name]: bool = self.column_is_empty(column_name)
+
+        if empty_only is True:
+            return pd.Series(all_empty_dict)
 
         return pd.Series(empty_dict)
 
@@ -244,7 +267,7 @@ class Query:
         Returns:
             self (Self)
         """
-        numeric_columns: List[str] = self.df.select_dtypes(include=np.number).keys().to_list()
+        numeric_columns: List[str] = self.columns_numeric
 
         if column_names is None:
             self.columns_selected = numeric_columns
@@ -366,4 +389,6 @@ class Query:
         if len(self.columns_selected) == 0:
             return self.df
 
-        return self.df[self.columns_selected]
+        self.df = self.df[self.columns_selected]
+
+        return self.df

@@ -461,13 +461,19 @@ class Plot:
 
         return self
 
-    def plot_all_regression(self, df: pd.DataFrame, x: str, y: str, kwargs: Dict[str, Any] = None) -> Self:
-        return self
+    def plot_regression(self, x: str, y: str, df: pd.DataFrame = None, lowess: bool = False,
+                        order: int = 1, kwargs: Dict[str, Any] = None) -> Self:
 
-    def plot_linear_regression(self, df: pd.DataFrame, x: str, y: str, kwargs: Dict[str, Any] = None) -> Self:
-        return self
+        if df is None:
+            df = self.df.copy()
 
-    def plot_polynomial(self, df: pd.DataFrame, x: str, y: str, order: int = 2, kwargs: Dict[str, Any] = None) -> Self:
+        df = self._set_df_for_two_columns(x=x, y=x, df=df)
+
+        if lowess is True:
+            sns.regplot(data=df, x=x, y=y, lowess=True)
+            return self
+
+        sns.regplot(data=df, x=x, y=y, order=order)
         return self
 
     def plot_columns(self, columns: str | list[str],
