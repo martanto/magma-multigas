@@ -390,5 +390,6 @@ class Query:
             return self.df
 
         self.df = self.df[self.columns_selected]
+        self.columns_numeric: List[str] = self.df.select_dtypes(include=np.number).keys().to_list()
 
         return self.df
