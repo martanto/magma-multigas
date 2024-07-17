@@ -67,7 +67,8 @@ class Query:
         self.start_date, self.start_datetime = self._datetime(df)
         self.end_date, self.end_datetime = self._datetime(df, -1)
 
-    def _datetime(self, df: pd.DataFrame, index: int = 0) -> Tuple[str, pd.Timestamp] | Tuple[str, Any]:
+    @staticmethod
+    def _datetime(df: pd.DataFrame, index: int = 0) -> Tuple[str, pd.Timestamp] | Tuple[str, Any]:
         pd_index = df.index[index]
         if isinstance(df.index, pd.DatetimeIndex):
             return pd_index.strftime('%Y-%m-%d'), pd.Timestamp(pd_index)
