@@ -129,7 +129,8 @@ class Plot:
 
         return ax
 
-    def _ax_plot(self, df: pd.DataFrame, ax: plt.Axes, column: str) -> plt.Axes:
+    @staticmethod
+    def _ax_plot(df: pd.DataFrame, ax: plt.Axes, column: str) -> plt.Axes:
         """Line plot.
 
         Args:
@@ -360,8 +361,13 @@ class Plot:
         return df
 
     def _set_datetime_for_title(self, df: pd.DataFrame) -> str:
-        _start_date = df[self.datetime_column].iloc[0].strftime('%d %b %Y, %H:%M:%S')
-        _end_date = df[self.datetime_column].iloc[-1].strftime('%d %b %Y, %H:%M:%S')
+        _start_date = df.index[0]
+        _end_date = df.index[-1]
+
+        if not isinstance(df.index, pd.DatetimeIndex):
+            _start_date = df[self.datetime_column].iloc[0].strftime('%d %b %Y, %H:%M:%S')
+            _end_date = df[self.datetime_column].iloc[-1].strftime('%d %b %Y, %H:%M:%S')
+
         return f"{_start_date} - {_end_date} UTC"
 
     def plot_density(self, x: str, y: str, df: pd.DataFrame = None,
