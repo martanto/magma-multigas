@@ -10,6 +10,8 @@ from .validator import (
     validate_index_as_datetime,
 )
 
+from .utilities import convert_to_direction
+
 from typing import (
     List,
     Dict,
@@ -345,6 +347,21 @@ class Query:
         """
         df = self.df
         self.df = df[df[column_name].between(start_value, end_value)]
+        return self
+
+    def add_wind_direction(self, wind_direction_column_name: str) -> Self:
+        """Add wind direction column.
+
+        Args:
+            wind_direction_column_name (str): column name
+
+        Returns:
+            self (Self)
+        """
+        self.df['wind_direction'] = self.df.apply(
+            lambda row: convert_to_direction(direction_degree=row[wind_direction_column_name]), axis=1)
+
+        print(f"✅ 'wind_direction' column has been added to dataframe.")
         return self
 
     def where_date_between(self, start_date: str, end_date: str) -> Self:

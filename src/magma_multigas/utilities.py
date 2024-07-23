@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 
 from typing import Dict, Tuple
+from .variables import wind_direction_8, wind_direction_16
 
 
 def regression_function(df: pd.DataFrame, column: str) -> str:
@@ -58,3 +59,25 @@ def all_evaluations(df: pd.DataFrame, column: str) -> Dict[str, np.float64]:
         'rmse': root_mean_squared_error(y_true, y_pred),
         'r2': r_squared(y_true, y_pred)
     }
+
+
+def convert_to_direction(direction_degree: float, return_as_code: bool = False, direction_to_use: int = 16) -> str:
+    """Convert degree to wind direction.
+
+    Args:
+        direction_degree (float): The degree to convert.
+        return_as_code (bool, optional): Whether to return code or not. Defaults to False.
+        direction_to_use (int, optional): Which direction to convert. Defaults to 16.
+
+    Returns:
+        str: The converted direction.
+    """
+    assert (direction_to_use == 16) or (direction_to_use == 8), ValueError("direction_to_use must be either 16 or 8")
+
+    wind_directions = wind_direction_16 if (direction_to_use == 16) else wind_direction_8
+
+    for directions in wind_directions:
+        if directions['min_degree'] <= direction_degree < directions['max_degree']:
+            if return_as_code is True:
+                return directions['code']
+            return directions['direction']
