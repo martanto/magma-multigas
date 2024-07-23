@@ -8,6 +8,7 @@
 - [ ] Plot data availability 
   - [ ] Calculate data count per day
 - [ ] Error check parameters 
+- [ ] Ternary plot. Gas CO2 left-bottom, H2S right-bottom, SO2 at top
 
 ### ⌚ In Progress
 
