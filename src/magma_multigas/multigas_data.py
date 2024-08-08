@@ -5,7 +5,7 @@ from .query import Query
 from .validator import validate_file_type
 from .plot import Plot
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Any, Dict, List, Tuple
 
 
 def start_and_end_date(df: pd.DataFrame = None) -> Tuple[str, str]:
@@ -19,6 +19,13 @@ def start_and_end_date(df: pd.DataFrame = None) -> Tuple[str, str]:
 
 
 class MultiGasData(Query):
+    total_data = {
+        'two_seconds': 5760,
+        'one_minute': 1440,
+        'six_hours': 4,
+        'zero': 4,
+    }
+
     def __init__(self, type_of_data: str, csv_file: str, force: bool = False, index_col: str = None):
         """Data of MultiGas
         """
@@ -35,6 +42,9 @@ class MultiGasData(Query):
 
         super().__init__(self.set_df(csv_file=self.csv_file, index_col=index_col))
         print(f"📅 {type_of_data} available from: {self.start_datetime} to {self.end_datetime}")
+
+        # Removing duplicates
+        self.df.drop_duplicates(inplace=True)
 
     def __str__(self) -> str:
         """Return type of multigas data"""
@@ -103,7 +113,7 @@ class MultiGasData(Query):
         with open(csv, 'r') as file:
             contents: list[str] = file.readlines()[0].replace("\"", '').split(',')
             headers: dict[str, str] = {
-                "format_data": contents[0].strip(),
+                'format_data': contents[0].strip(),
                 'station': contents[1].strip(),
                 'logger_type': contents[2].strip(),
                 'data_counts': len(self.df_original),
@@ -149,17 +159,15 @@ class MultiGasData(Query):
         """
         validate_file_type(file_type)
 
-        file_extension = 'csv'
         sub_output_dir = 'csv'
 
         if file_type != 'csv':
-            file_extension = 'xlsx'
             sub_output_dir = 'excel'
 
         if output_dir is None:
             output_dir = self.output_dir
 
-        output_dir = os.path.join(output_dir, sub_output_dir)
+        output_dir = os.path.join(output_dir, self.metadata['station'], sub_output_dir)
         os.makedirs(output_dir, exist_ok=True)
 
         df = self.get() if use_filtered else self.df_original
@@ -167,9 +175,9 @@ class MultiGasData(Query):
         start_date, end_date = start_and_end_date(df)
 
         if filename is None:
-            filename = f"{self.type_of_data}_{start_date}_{end_date}_{self.filename}.{file_extension}"
+            filename = f"{self.type_of_data}_{start_date}_{end_date}_{self.filename}"
 
-        file_location: str = os.path.join(output_dir, f"{filename}.{file_extension}")
+        file_location: str = os.path.join(output_dir, f"{filename}")
 
         if not df.empty:
             df.to_excel(file_location, **kwargs) if file_type != 'csv' \
@@ -178,6 +186,73 @@ class MultiGasData(Query):
             return file_location
         print(f'⚠️ Data {self.filename} is empty. Skip.')
         return None
+
+    def _percentage_availability(self, total_data: int) -> float:
+        _total_data = self.total_data[self.type_of_data]
+        return total_data/_total_data * 100
+
+    def extract_daily(self, file_type: str = 'csv', save_availability: bool = True) -> List[Dict[str, int]]:
+        """Extract daily data from MultiGas
+
+        Args:
+            file_type (str): Chose between 'csv' or 'xlsx'
+            save_availability (bool): save availability data
+
+        Returns:
+            List[Dict[str, int]]: daily data from MultiGas
+        """
+        assert(file_type == 'csv' or file_type == 'xlsx'), f"{file_type} is not supported. Please use csv or xlsx"
+
+        availability: List[Dict[str, Any]] = []
+
+        output_dir: str = os.path.join(self.output_dir, 'daily', self.metadata['station'], self.type_of_data)
+        os.makedirs(output_dir, exist_ok=True)
+
+        df = self.df
+        start_date, end_date = start_and_end_date(df)
+        dates: pd.DatetimeIndex = pd.date_range(start_date, end_date, freq='D')
+
+        for date_obj in dates:
+            date_str: str = date_obj.strftime('%Y-%m-%d')
+            filename: str = f"{date_str}.{file_type}"
+            output_file: str = os.path.join(output_dir, filename)
+            df_per_date: pd.DataFrame = df.loc[date_str]
+
+            if df_per_date.empty is True:
+                print(f"⚠️ {date_str} :: [{self.type_of_data}] Empty data.")
+                date_availability: Dict[str, Any] = {
+                    'date' : date_str,
+                    'total_data': 0,
+                    'percentage_available': 0
+                }
+                availability.append(date_availability)
+                continue
+
+            if file_type == 'csv':
+                df_per_date.to_csv(output_file, index=True)
+            else:
+                df_per_date.to_excel(output_file, index=True)
+
+            date_availability: Dict[str, Any] = {
+                'date': date_str,
+                'total_data': len(df_per_date),
+                'percentage_available': self._percentage_availability(total_data=len(df_per_date))
+            }
+
+            availability.append(date_availability)
+
+            print(f"💾 {date_str} :: [{self.type_of_data}] Saved to {output_file}")
+
+        if save_availability is True:
+            availability_dir: str = os.path.join(self.output_dir, 'availability', self.metadata['station'],)
+            os.makedirs(availability_dir, exist_ok=True)
+
+            availability_file: str = os.path.join(availability_dir, f'{self.type_of_data}.csv')
+
+            df_availability: pd.DataFrame = pd.DataFrame.from_records(availability)
+            df_availability.to_csv(availability_file, index=False)
+
+        return availability
 
     def plot(self, width: int = 12, height: int = 4, y_max_multiplier: float = 1.0,
              datetime_column: str = 'TIMESTAMP', margins: float = 0.05, style = "whitegrid") -> Plot:

@@ -1,7 +1,7 @@
 from .multigas_data import MultiGasData
 from .plot import Plot
 from .validator import validate_selected_data, validate_file_type
-from typing import Dict, Self
+from typing import Any, Dict, List, Self
 
 types = ('two_seconds', 'six_hours', 'one_minute', 'zero', 'span')
 
@@ -172,6 +172,21 @@ class MultiGas:
                 return self.zero
             case 'span':
                 return self.span
+
+    def extract_daily(self) -> Dict[str, List[Dict[str, int]]]:
+        """Extract daily data.
+
+        Returns:
+            Self: MultiGas
+        """
+        availability: Dict[str, List[Dict[str, int]]] = {}
+
+        for type_of_data in self.files.keys():
+            multigas_data: MultiGasData | None = self.select(type_of_data).get()
+            if multigas_data is not None:
+                availability[type_of_data] = multigas_data.extract_daily()
+
+        return availability
 
     def save(self, file_type: str = 'excel', output_dir: str = None,
              use_filtered: bool = True, **kwargs) -> None:
