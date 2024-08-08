@@ -2,7 +2,12 @@ import numpy as np
 import pandas as pd
 
 from typing import Dict, Tuple
-from .variables import wind_direction_8, wind_direction_16
+from .variables import (
+    wind_direction_8,
+    wind_direction_16,
+    wind_quadrant_4,
+    wind_quadrant_8
+)
 
 
 def regression_function(df: pd.DataFrame, column: str) -> str:
@@ -81,3 +86,15 @@ def convert_to_direction(direction_degree: float, return_as_code: bool = False, 
             if return_as_code is True:
                 return directions['code']
             return directions['direction']
+
+
+def convert_to_quadrant(direction_degree: float, return_as_code: bool = False, quadrant_to_use: int = 8):
+    assert (quadrant_to_use == 8) or (quadrant_to_use == 4), ValueError("quadrant_to_use must be either 4 or 8")
+
+    wind_quadrants = wind_quadrant_8 if (quadrant_to_use == 8) else wind_quadrant_4
+
+    for quadrants in wind_quadrants:
+        if quadrants['min_degree'] <= direction_degree < quadrants['max_degree']:
+            if return_as_code is True:
+                return quadrants['code']
+            return quadrants['direction']

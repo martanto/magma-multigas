@@ -302,9 +302,9 @@ wind_direction_16: List[Dict[str, Any]] = [
     }
 ]
 
-wind_kuadran_4: List[Dict[str, Any]] = [
+wind_quadrant_4: List[Dict[str, Any]] = [
     {
-        "direction": "Kuadran I",
+        "direction": "Quadrant I",
         "code": "I",
         "degree": 45,
         "min_degree": 0,
@@ -312,7 +312,7 @@ wind_kuadran_4: List[Dict[str, Any]] = [
         "range_degree": "0 - 90"
     },
     {
-        "direction": "Kuadran II",
+        "direction": "Quadrant II",
         "code": "II",
         "degree": 135,
         "min_degree": 90,
@@ -320,7 +320,7 @@ wind_kuadran_4: List[Dict[str, Any]] = [
         "range_degree": "90 - 180"
     },
     {
-        "direction": "Kuadran III",
+        "direction": "Quadrant III",
         "code": "III",
         "degree": 225,
         "min_degree": 180,
@@ -328,7 +328,7 @@ wind_kuadran_4: List[Dict[str, Any]] = [
         "range_degree": "180 - 270"
     },
     {
-        "direction": "Kuadran IV",
+        "direction": "Quadrant IV",
         "code": "IV",
         "degree": 315,
         "min_degree": 270,
@@ -337,9 +337,9 @@ wind_kuadran_4: List[Dict[str, Any]] = [
     },
 ]
 
-wind_kuadran_8: List[Dict[str, Any]] = [
+wind_quadrant_8: List[Dict[str, Any]] = [
     {
-        "direction": "Kuadran I",
+        "direction": "Quadrant I",
         "code": "I",
         "degree": 22.5,
         "min_degree": 0,
@@ -347,7 +347,7 @@ wind_kuadran_8: List[Dict[str, Any]] = [
         "range_degree": "0 - 45"
     },
     {
-        "direction": "Kuadran II",
+        "direction": "Quadrant II",
         "code": "II",
         "degree": 67.5,
         "min_degree": 45,
@@ -355,7 +355,7 @@ wind_kuadran_8: List[Dict[str, Any]] = [
         "range_degree": "45 - 90"
     },
     {
-        "direction": "Kuadran III",
+        "direction": "Quadrant III",
         "code": "III",
         "degree": 112.5,
         "min_degree": 90,
@@ -363,7 +363,7 @@ wind_kuadran_8: List[Dict[str, Any]] = [
         "range_degree": "90 - 135"
     },
     {
-        "direction": "Kuadran IV",
+        "direction": "Quadrant IV",
         "code": "IV",
         "degree": 157.5,
         "min_degree": 135,
@@ -371,7 +371,7 @@ wind_kuadran_8: List[Dict[str, Any]] = [
         "range_degree": "135 - 180"
     },
     {
-        "direction": "Kuadran V",
+        "direction": "Quadrant V",
         "code": "V",
         "degree": 202.5,
         "min_degree": 180,
@@ -379,7 +379,7 @@ wind_kuadran_8: List[Dict[str, Any]] = [
         "range_degree": "180 - 225"
     },
     {
-        "direction": "Kuadran VI",
+        "direction": "Quadrant VI",
         "code": "VI",
         "degree": 247.5,
         "min_degree": 225,
@@ -387,7 +387,7 @@ wind_kuadran_8: List[Dict[str, Any]] = [
         "range_degree": "225 - 270"
     },
     {
-        "direction": "Kuadran VII",
+        "direction": "Quadrant VII",
         "code": "VII",
         "degree": 292.5,
         "min_degree": 270,
@@ -395,7 +395,7 @@ wind_kuadran_8: List[Dict[str, Any]] = [
         "range_degree": "270 - 315"
     },
     {
-        "direction": "Kuadran VIII",
+        "direction": "Quadrant VIII",
         "code": "VIII",
         "degree": 337.5,
         "min_degree": 315,
