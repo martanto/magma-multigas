@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 
 from pandas.api.types import is_numeric_dtype
+
 from .validator import (
     validate_status,
     validate_column_name,
@@ -10,7 +11,10 @@ from .validator import (
     validate_index_as_datetime,
 )
 
-from .utilities import convert_to_direction
+from .utilities import (
+    convert_to_direction,
+    convert_to_quadrant,
+)
 
 from typing import (
     List,
@@ -345,23 +349,47 @@ class Query:
         Returns:
             self (Self)
         """
+        column_list: List[str] = self.columns
+        validate_column_name(column_name, column_list)
+
         df = self.df
         self.df = df[df[column_name].between(start_value, end_value)]
         return self
 
-    def add_wind_direction(self, wind_direction_column_name: str) -> Self:
+    def add_wind_direction(self, wind_direction_column_name: str, as_code: bool = False,
+                           direction_to_use: int = 16) -> Self:
         """Add wind direction column.
 
         Args:
             wind_direction_column_name (str): column name
+            as_code (bool): add wind direction column as code. Defaults to False
+            direction_to_use (int): direction to use. Default is 16
 
         Returns:
             self (Self)
         """
         self.df['wind_direction'] = self.df.apply(
-            lambda row: convert_to_direction(direction_degree=row[wind_direction_column_name]), axis=1)
+            lambda row: convert_to_direction(direction_degree=row[wind_direction_column_name],
+                                             return_as_code=as_code, direction_to_use=direction_to_use), axis=1)
 
         print(f"✅ 'wind_direction' column has been added to dataframe.")
+        return self
+
+    def add_quadrant(self, wind_direction_column_name: str, as_code: bool = False,
+                     quadrant_to_use: int = 8) -> Self:
+        """Add quadrant column.
+
+        Args:
+            wind_direction_column_name (str): column name
+            as_code (bool): add quadrant column as code. Default is False
+            quadrant_to_use (int): quadrant direction. Default is 8
+
+        Returns:
+            self (Self)
+        """
+        self.df['quadrant'] = self.df.apply(
+            lambda row: convert_to_quadrant(direction_degree=row[wind_direction_column_name],
+                                            return_as_code=as_code, quadrant_to_use=quadrant_to_use), axis=1)
         return self
 
     def where_date_between(self, start_date: str, end_date: str) -> Self:
@@ -398,16 +426,20 @@ class Query:
         self.df: pd.DataFrame = df[(df.index >= start_datetime) & (df.index <= end_datetime)]
         return self
 
-    def get(self) -> pd.DataFrame:
+    def get(self, inplace: bool = True) -> pd.DataFrame:
         """Get filtered data
 
         Returns:
             pd.DataFrame: filtered data
         """
+        if inplace is False:
+            df = self.df
+            self.df = self.df_original.copy()
+            return df
+
         if len(self.columns_selected) == 0:
             return self.df
 
         self.df = self.df[self.columns_selected]
         self.columns_numeric: List[str] = self.df.select_dtypes(include=np.number).keys().to_list()
-
         return self.df
