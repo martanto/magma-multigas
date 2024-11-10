@@ -32,6 +32,7 @@ class PlotAvailability:
         df = self._df
         df['date'] = pd.to_datetime(df['date'])
         df.sort_values(by=['date'], inplace=True)
+        df.drop(df[df['percentage_available'] == 0].index, inplace=True)
         return df
 
     @property

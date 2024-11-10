@@ -26,7 +26,12 @@ class MultiGasData(Query):
         'zero': 4,
     }
 
-    def __init__(self, type_of_data: str, csv_file: str, force: bool = False, index_col: str = None):
+    def __init__(self, type_of_data: str,
+                 csv_file: str,
+                 force: bool = False,
+                 index_col: str = None,
+                 normalize_dir: str = None,
+                 data_length: int = None):
         """Data of MultiGas
         """
         self.current_dir = os.getcwd()
@@ -35,6 +40,8 @@ class MultiGasData(Query):
 
         self.force = force
         self.index_col = index_col if index_col is not None else 'TIMESTAMP'
+        self.normalize_dir = normalize_dir
+        self.data_length = data_length
         self.output_dir = output_dir
         self.csv_file: str = self.replace_nan(csv_file)
         self.filename: str = Path(self.csv_file).stem
@@ -83,6 +90,10 @@ class MultiGasData(Query):
         csv_dir, csv_filename = os.path.split(csv)
 
         normalize_dir = os.path.join(self.output_dir, 'normalize')
+
+        if self.normalize_dir is not None:
+            normalize_dir = os.path.join(normalize_dir, self.normalize_dir)
+
         os.makedirs(normalize_dir, exist_ok=True)
 
         save_path = os.path.join(normalize_dir, csv_filename)
@@ -154,7 +165,6 @@ class MultiGasData(Query):
         except Exception as e:
             print(f"❌ {e}")
 
-
     def save_as(self, file_type: str = 'excel', output_dir: str = None,
                 filename: str = None, use_filtered: bool = True, **kwargs) -> str | None:
         """Save data from MultiGas to specified file type
@@ -201,23 +211,30 @@ class MultiGasData(Query):
 
     def _percentage_availability(self, total_data: int) -> float:
         _total_data = self.total_data[self.type_of_data]
-        return total_data/_total_data * 100
 
-    def extract_daily(self, file_type: str = 'csv', save_availability: bool = True) -> List[Dict[str, int]]:
+        if self.data_length is not None:
+            _total_data = self.data_length
+
+        return total_data / _total_data * 100
+
+    def extract_daily(self, directory_name: str,
+                      file_type: str = 'csv',
+                      save_availability: bool = True) -> List[Dict[str, int]]:
         """Extract daily data from MultiGas
 
         Args:
+            directory_name (str): Where available data would be saved.
             file_type (str): Chose between 'csv' or 'xlsx'
             save_availability (bool): save availability data
 
         Returns:
             List[Dict[str, int]]: daily data from MultiGas
         """
-        assert(file_type == 'csv' or file_type == 'xlsx'), f"{file_type} is not supported. Please use csv or xlsx"
+        assert (file_type == 'csv' or file_type == 'xlsx'), f"{file_type} is not supported. Please use csv or xlsx"
 
         availability: List[Dict[str, Any]] = []
 
-        output_dir: str = os.path.join(self.output_dir, 'daily', self.metadata['station'], self.type_of_data)
+        output_dir: str = os.path.join(self.output_dir, 'daily', directory_name, self.type_of_data)
         os.makedirs(output_dir, exist_ok=True)
 
         df = self.df
@@ -233,7 +250,7 @@ class MultiGasData(Query):
             if df_per_date.empty is True:
                 print(f"⚠️ {date_str} :: [{self.type_of_data}] Empty data.")
                 date_availability: Dict[str, Any] = {
-                    'date' : date_str,
+                    'date': date_str,
                     'total_data': 0,
                     'percentage_available': 0
                 }
@@ -256,7 +273,7 @@ class MultiGasData(Query):
             print(f"💾 {date_str} :: [{self.type_of_data}] Saved to {output_file}")
 
         if save_availability is True:
-            availability_dir: str = os.path.join(self.output_dir, 'availability', self.metadata['station'],)
+            availability_dir: str = os.path.join(self.output_dir, 'availability', directory_name, )
             os.makedirs(availability_dir, exist_ok=True)
 
             availability_file: str = os.path.join(availability_dir, f'{self.type_of_data}.csv')
@@ -267,7 +284,7 @@ class MultiGasData(Query):
         return availability
 
     def plot(self, width: int = 12, height: int = 4, y_max_multiplier: float = 1.0,
-             datetime_column: str = 'TIMESTAMP', margins: float = 0.05, style = "whitegrid") -> Plot:
+             datetime_column: str = 'TIMESTAMP', margins: float = 0.05, style="whitegrid") -> Plot:
         """Plot selected data and columns.
 
         Args:
