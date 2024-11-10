@@ -93,7 +93,7 @@ class MultiGasData(Query):
 
         with open(csv, 'r') as file:
             file_content: str = file.read()
-            new_content = file_content.replace("\"NAN\"", "")
+            new_content = file_content.replace("NAN", "").replace("\"NAN\"", "")
             file.close()
             with open(save_path, 'w') as new_file:
                 new_file.write(new_content)
@@ -137,11 +137,23 @@ class MultiGasData(Query):
         if index_col is None:
             index_col = 'TIMESTAMP'
 
-        df = pd.read_csv(csv_file,
-                         skiprows=lambda x: x in [0, 2, 3],
-                         parse_dates=[index_col],
-                         index_col=[index_col])
-        return df
+        try:
+            df = pd.read_csv(csv_file,
+                             skiprows=lambda x: x in [0, 2, 3],
+                             parse_dates=[index_col],
+                             index_col=[index_col])
+            return df
+        except Exception as e:
+            print(f"⚠️ {e}. Parameters skiprows=[0,2,3] not working. Trying next read method.")
+
+        try:
+            df = pd.read_csv(csv_file,
+                             parse_dates=[index_col],
+                             index_col=[index_col])
+            return df
+        except Exception as e:
+            print(f"❌ {e}")
+
 
     def save_as(self, file_type: str = 'excel', output_dir: str = None,
                 filename: str = None, use_filtered: bool = True, **kwargs) -> str | None:
