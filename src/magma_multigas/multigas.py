@@ -32,13 +32,15 @@ info = """
 
 class MultiGas:
     def __init__(self,
-                 two_seconds: str,
                  six_hours: str,
                  one_minute: str,
                  zero: str,
+                 two_seconds: str = None,
                  span: str = None,
                  overwrite: bool = False,
-                 default: str = 'six_hours'):
+                 default: str = 'six_hours',
+                 normalize_dir: str = None,
+                 data_length: int = None,):
 
         if overwrite is True:
             print(f"⚠️ Existing data will be overwritten.")
@@ -51,12 +53,26 @@ class MultiGas:
             'span': span
         }
 
-        self.two_seconds: MultiGasData = MultiGasData('two_seconds', two_seconds, force=overwrite)
-        self.six_hours: MultiGasData = MultiGasData('six_hours', six_hours, force=overwrite)
-        self.one_minute: MultiGasData = MultiGasData('one_minute', one_minute, force=overwrite)
-        self.zero: MultiGasData = MultiGasData('zero', zero, force=overwrite)
-        self.span: MultiGasData | None = MultiGasData('span', span, force=overwrite) \
-            if span is not None else None
+        self.two_seconds: MultiGasData | None = MultiGasData('two_seconds',
+                                                             two_seconds,
+                                                             force=overwrite,
+                                                             normalize_dir=normalize_dir) if two_seconds is not None else None
+        self.six_hours: MultiGasData | None = MultiGasData('six_hours',
+                                                           six_hours,
+                                                           force=overwrite,
+                                                           normalize_dir=normalize_dir)
+        self.one_minute: MultiGasData | None = MultiGasData('one_minute',
+                                                            one_minute,
+                                                            force=overwrite,
+                                                            normalize_dir=normalize_dir,
+                                                            data_length=data_length)
+        self.zero: MultiGasData | None = MultiGasData('zero',
+                                                      zero, force=overwrite,
+                                                      normalize_dir=normalize_dir)
+        self.span: MultiGasData | None = MultiGasData('span',
+                                                      span,
+                                                      force=overwrite,
+                                                      normalize_dir=normalize_dir) if span is not None else None
 
         self.data_selected: str = default
 
@@ -173,8 +189,11 @@ class MultiGas:
             case 'span':
                 return self.span
 
-    def extract_daily(self) -> Dict[str, List[Dict[str, int]]]:
+    def extract_daily(self, directory_name: str) -> Dict[str, List[Dict[str, int]]]:
         """Extract daily data.
+
+        Args:
+            directory_name (str): Where available data would be saved.
 
         Returns:
             Self: MultiGas
@@ -184,7 +203,7 @@ class MultiGas:
         for type_of_data in self.files.keys():
             multigas_data: MultiGasData | None = self.select(type_of_data).get()
             if multigas_data is not None:
-                availability[type_of_data] = multigas_data.extract_daily()
+                availability[type_of_data] = multigas_data.extract_daily(directory_name)
 
         return availability
 

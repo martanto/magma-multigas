@@ -86,7 +86,7 @@ class Plot:
         """Returns plot dataframe. Alias for df attribute."""
         return self.df
 
-    def _ax_scatter(self, df: pd.DataFrame, ax: plt.Axes, column: str) -> plt.Axes:
+    def _ax_scatter(self, df: pd.DataFrame, ax: plt.Axes, column: str, **kwargs) -> plt.Axes:
         """Scatter plot.
 
         Args:
@@ -120,7 +120,7 @@ class Plot:
             _end_date = df[self.datetime_column].iloc[-1].strftime('%d %b %Y, %H:%M:%S')
             _datetime = f"{_start_date} - {_end_date} UTC"
             title = f"{column}/{df.index.name}\n{_datetime}"
-            ax.set_title(title)
+
 
         ax.scatter(df.index, df[column], edgecolors="k", **kwargs)
 
@@ -495,7 +495,8 @@ class Plot:
                      plot_regression: bool = False,
                      order: int = 1,
                      disable_regression_for: List[str] = None,
-                     validate_column: bool = True) -> Self:
+                     validate_column: bool = True,
+                     **kwargs) -> Self:
         """Plot for selected columns
 
         Args:
@@ -512,7 +513,8 @@ class Plot:
             plot_regression (bool): Plot regression
             order (int, optional): Order of regression. Default is 1.
             disable_regression_for (list[str]): List of columns disable regression
-            validate_column (bbol): Validating column is exists or not
+            validate_column (bool): Check if columns are valid. Default True
+            kwargs: keywords argument
 
         Returns:
             Plot dataframe
@@ -557,7 +559,7 @@ class Plot:
         for index, column in enumerate(columns):
             ax = axs if (len(columns) == 1) else axs[index]
 
-            ax = self._ax_scatter(df=df, ax=ax, column=column) if plot_type == 'scatter' \
+            ax = self._ax_scatter(df=df, ax=ax, column=column, **kwargs) if plot_type == 'scatter' \
                 else self._ax_plot(df=df, ax=ax, column=column)
 
             # Plot Regression
