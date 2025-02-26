@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name =  "magma-multigas"
-version = "1.3.1"
+version = "1.3.3"
 authors = [
     {name = "Martanto", email = "martanto@live.com"},
 ]
@@ -12,31 +12,31 @@ description = "MultiGas package for internal use. A collaboration between CVGHM 
 readme = "README.md"
 license = {file = "LICENSE"}
 keywords = ["gas", "volcano", "multigas", "usgs", "cvghm", "pvmbg"]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "openpyxl>=3.1.5",
     "pandas>=2.2.2",
     "numpy>=2.0.0",
     "matplotlib>=3.9.0",
     "pytz>=2024.1",
-    "kaleido==0.1.0.post1",
+    "kaleido",
     "plotly>=5.23.0",
     "windrose",
 ]
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
 
 [project.optional-dependencies]
 base = [
-    "openpyxl",
-    "pandas",
-    "numpy",
-    "matplotlib",
+    "openpyxl>=3.1.0",
+    "numpy>=2.0.0",
+    "pandas>=2.2.2",
+    "matplotlib>=3.9.0",
+    "seaborn>=0.13.2",
     "windrose",
 ]
 
