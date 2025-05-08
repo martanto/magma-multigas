@@ -28,10 +28,10 @@ class PlotWindDirection:
         self.end_date = self.df_original.index[-1]
 
         if start_date is None and end_date is None:
-            self.df = self.df_original
+            self.df = (multigas_data.select_columns(column_names=selected_column_names)).get()
         else:
             self.df = (multigas_data.where_date_between(start_date=start_date, end_date=end_date)
-                              .select_columns(column_names=selected_column_names)).df
+                              .select_columns(column_names=selected_column_names)).get()
             self.start_date: pd.Timestamp = self.df.index[0]
             self.start_date: pd.Timestamp = self.df.index[-1]
 
