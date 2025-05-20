@@ -22,6 +22,8 @@ dependencies = [
     "kaleido",
     "plotly>=5.23.0",
     "windrose",
+    "seaborn",
+    "importlib-resources"
 ]
 classifiers = [
     "License :: OSI Approved :: MIT License",
