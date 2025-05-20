@@ -34,6 +34,9 @@ class MultiGasData(Query):
                  data_length: int = None):
         """Data of MultiGas
         """
+        assert type_of_data in self.total_data.keys(), \
+            f"{type_of_data} value should be one of two_seconds, one_minute, six_hours, or zero."
+
         self.current_dir = os.getcwd()
         output_dir = os.path.join(self.current_dir, 'output')
         os.makedirs(output_dir, exist_ok=True)
@@ -223,13 +226,16 @@ class MultiGasData(Query):
         """Extract daily data from MultiGas
 
         Args:
-            directory_name (str): Where available data would be saved.
+            directory_name (str): Where daily data would be saved.
             file_type (str): Chose between 'csv' or 'xlsx'
             save_availability (bool): save availability data
 
         Returns:
             List[Dict[str, int]]: daily data from MultiGas
         """
+        _directory_name = os.path.join(self.output_dir, 'daily', directory_name)
+        os.makedirs(_directory_name, exist_ok=True)
+
         assert (file_type == 'csv' or file_type == 'xlsx'), f"{file_type} is not supported. Please use csv or xlsx"
 
         availability: List[Dict[str, Any]] = []
