@@ -164,3 +164,7 @@ output/
 /figures/
 *.png
 /examples/figures/
+*.csv
+*.xlsx
+*.rar
+/.idea
