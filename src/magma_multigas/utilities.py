@@ -31,8 +31,8 @@ def get_slope_and_intercept(df: pd.DataFrame, column: str) -> Tuple[np.ndarray, 
 
     y = df[column]
 
-    x_mean = np.mean(x)
-    y_mean = np.mean(y)
+    x_mean: float = np.mean(x)
+    y_mean: float = np.mean(y)
     slope = np.sum((x - x_mean) * (y - y_mean)) / np.sum((x - x_mean) ** 2)
     intercept = y_mean - slope * x_mean
     return x, slope, intercept

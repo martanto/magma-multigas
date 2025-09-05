@@ -8,6 +8,7 @@ from magma_multigas.diagnose import Query
 from magma_multigas.resources import columns_description
 from magma_multigas.plot_availability import PlotAvailability
 from magma_multigas.plot_wind_direction import PlotWindDirection
+from magma_multigas.plot_var import PlotWithMagma
 from magma_multigas.validator import STATUSES
 
 from pkg_resources import get_distribution
@@ -28,4 +29,5 @@ __all__ = [
     "STATUSES",
     "PlotAvailability",
     "PlotWindDirection",
+    "PlotWithMagma",
 ]

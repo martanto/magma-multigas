@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name =  "magma-multigas"
-version = "1.4.2"
+version = "1.5.0"
 authors = [
     {name = "Martanto", email = "martanto@live.com"},
 ]
@@ -18,6 +18,8 @@ dependencies = [
     "pandas>=2.2.2",
     "numpy>=2.2.5",
     "matplotlib>=3.9.0",
+    "magma-auth>=1.0.0",
+    "magma-var>=0.1.0",
     "pytz>=2024.1",
     "kaleido",
     "plotly>=5.23.0",
