@@ -1,10 +1,10 @@
 [build-system]
-requires = ["flit_core>=3.4"]
-build-backend = "flit_core.buildapi"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name =  "magma-multigas"
-version = "1.5.0"
+version = "2.0.0"
 authors = [
     {name = "Martanto", email = "martanto@live.com"},
 ]
@@ -12,20 +12,19 @@ description = "MultiGas package for internal use. A collaboration between CVGHM 
 readme = "README.md"
 license = {file = "LICENSE"}
 keywords = ["gas", "volcano", "multigas", "usgs", "cvghm", "pvmbg"]
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.14"
 dependencies = [
     "openpyxl>=3.1.5",
     "pandas>=2.2.2",
-    "numpy>=2.2.5",
+    "numpy>=2.0.0,<3.0.0",
     "matplotlib>=3.9.0",
-    "magma-auth>=1.0.0",
-    "magma-var>=0.1.0",
-    "pytz>=2024.1",
-    "kaleido",
     "plotly>=5.23.0",
     "windrose",
     "seaborn",
-    "importlib-resources"
+    "importlib-resources",
+    "magma-database>=1.5.0",
+    "magma-var>=0.0.9",
+    "magma-auth>=1.0.0",
 ]
 classifiers = [
     "License :: OSI Approved :: MIT License",
@@ -35,14 +34,49 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-base = [
-    "openpyxl>=3.1.0",
-    "numpy>=2.0.0",
-    "pandas>=2.2.2",
-    "matplotlib>=3.9.0",
-    "seaborn>=0.13.2",
-    "windrose",
+dev = [
+    "ruff>=0.1.0",
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "ipykernel>=6.25.0",
+    "jupyter>=1.0.0"
 ]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "UP", # pyupgrade
+]
+ignore = [
+    "E501", # line too long, handled by formatter
+    "B008", # do not perform function calls in argument defaults
+    "C901", # too complex
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.ruff.lint.isort]
+known-first-party = ["magma_multigas"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = "-v --cov=magma_multigas --cov-report=term-missing"
 
 [project.urls]
 Homepage = "https://github.com/martanto/magma-multigas"
