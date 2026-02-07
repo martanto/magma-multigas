@@ -1,232 +1,292 @@
-from .multigas_data import MultiGasData
-from .plot import Plot
-from .validator import validate_selected_data, validate_file_type
-from typing import Any, Dict, List, Self
+"""Main entry point facade for magma-multigas v2.0."""
 
-types = ('two_seconds', 'six_hours', 'one_minute', 'zero', 'span')
+from pathlib import Path
+from typing import Dict, Optional
 
-info = """
-ℹ️ =============================
-- Six hours of data used to plot:
-1. CO2 - SO2 - H2S Concentration
-2. CO2/H2S Ratio
-3. H2O/CO2 Ratio
-4. H2S/SO2 Ratio
-5. CO2/SO2 Ratio
-6. CO2/Stotal Ratio,
-7. Sulfur Speciation (%) = Avg_SO2_proportion, Avg_H2S_proportion
+import pandas as pd
 
-- One minute of data used to plot:
-1. Air Temperature
-2. Air Humidity
-3. Battery Voltage
-4. Wind Speed
-5. Wind Direction
-
-- Zero data used to plot:
-1. CO2 - Zero
-2. H2S - Zero
-3. SO2 - Zero
-"""
+from .config.logging import get_logger, setup_logging
+from .core.exceptions import LoaderError, MagmaMultigasError
+from .core.types import DatasetType, DateLike, LogLevel, PathLike
+from .data.collection import DatasetCollection
+from .data.dataset import Dataset
+from .data.loader import DataLoader
+from .data.metadata import MetadataExtractor
 
 
 class MultiGas:
-    def __init__(self,
-                 six_hours: str,
-                 one_minute: str,
-                 zero: str,
-                 two_seconds: str = None,
-                 span: str = None,
-                 overwrite: bool = False,
-                 default: str = 'six_hours',
-                 normalize_dir: str = None,
-                 data_length: int = None,):
+    """Main entry point facade for magma-multigas.
 
-        if overwrite is True:
-            print(f"⚠️ Existing data will be overwritten.")
+    API improvements over v1.x:
+    - Direct property access: mg.six_hours (not .select().get())
+    - Configurable logging (no forced print statements)
+    - Cached loading for faster re-initialization
+    - Type hints throughout
 
-        self.files: Dict[str, str] = {
-            'two_seconds': two_seconds,
-            'six_hours': six_hours,
-            'one_minute': one_minute,
-            'zero': zero,
-            'span': span
+    Example:
+        >>> mg = MultiGas(
+        ...     six_hours="data/six_hours.dat",
+        ...     normalize=True,
+        ...     log_level=LogLevel.INFO
+        ... )
+        >>> data = mg.six_hours
+        >>> filtered = data.filter_date_range("2024-05-01", "2024-06-01")
+        >>> filtered.save("output/filtered.csv")
+
+    Attributes:
+        two_seconds: Two-second interval dataset (if loaded)
+        six_hours: Six-hour interval dataset (if loaded)
+        one_minute: One-minute interval dataset (if loaded)
+        zero: Zero calibration dataset (if loaded)
+        span: Span calibration dataset (if loaded)
+    """
+
+    def __init__(
+        self,
+        two_seconds: Optional[PathLike] = None,
+        six_hours: Optional[PathLike] = None,
+        one_minute: Optional[PathLike] = None,
+        zero: Optional[PathLike] = None,
+        span: Optional[PathLike] = None,
+        normalize: bool = True,
+        cache_normalized: bool = True,
+        cache_dir: Optional[PathLike] = None,
+        log_level: LogLevel = LogLevel.INFO,
+    ):
+        """Initialize MultiGas with data files.
+
+        Args:
+            two_seconds: Path to two-second interval data file
+            six_hours: Path to six-hour interval data file
+            one_minute: Path to one-minute interval data file
+            zero: Path to zero calibration data file
+            span: Path to span calibration data file
+            normalize: Whether to normalize NAN strings to np.nan
+            cache_normalized: Whether to cache normalized files
+            cache_dir: Custom cache directory (default: ./output/cache)
+            log_level: Logging verbosity level
+
+        Raises:
+            MagmaMultigasError: If initialization fails
+        """
+        # Setup logging
+        self.logger = setup_logging(log_level)
+        self.logger.info("Initializing MultiGas v2.0")
+
+        # Initialize data loader
+        self.loader = DataLoader(cache_dir=Path(cache_dir) if cache_dir else None)
+        self.metadata_extractor = MetadataExtractor()
+
+        # Store initialization parameters
+        self._normalize = normalize
+        self._cache_normalized = cache_normalized
+
+        # Load datasets
+        self._datasets: Dict[str, Dataset] = {}
+
+        file_paths = {
+            DatasetType.TWO_SECONDS: two_seconds,
+            DatasetType.SIX_HOURS: six_hours,
+            DatasetType.ONE_MINUTE: one_minute,
+            DatasetType.ZERO: zero,
+            DatasetType.SPAN: span,
         }
 
-        self.two_seconds: MultiGasData | None = MultiGasData('two_seconds',
-                                                             two_seconds,
-                                                             force=overwrite,
-                                                             normalize_dir=normalize_dir) if two_seconds is not None else None
-        self.six_hours: MultiGasData | None = MultiGasData('six_hours',
-                                                           six_hours,
-                                                           force=overwrite,
-                                                           normalize_dir=normalize_dir)
-        self.one_minute: MultiGasData | None = MultiGasData('one_minute',
-                                                            one_minute,
-                                                            force=overwrite,
-                                                            normalize_dir=normalize_dir,
-                                                            data_length=data_length)
-        self.zero: MultiGasData | None = MultiGasData('zero',
-                                                      zero, force=overwrite,
-                                                      normalize_dir=normalize_dir)
-        self.span: MultiGasData | None = MultiGasData('span',
-                                                      span,
-                                                      force=overwrite,
-                                                      normalize_dir=normalize_dir) if span is not None else None
+        for dataset_type, file_path in file_paths.items():
+            if file_path is not None:
+                try:
+                    self._load_dataset(dataset_type, file_path)
+                except Exception as e:
+                    self.logger.error(
+                        f"Failed to load {dataset_type.value} from {file_path}: {e}"
+                    )
+                    # Continue loading other datasets
+                    continue
 
-        self.data_selected: str = default
+        if not self._datasets:
+            self.logger.warning("No datasets were loaded successfully")
 
-        print(f'ℹ️ DEFAULT selected: {default}')
-        self.selected: MultiGasData = self.get(default)
-
-    def __repr__(self) -> str:
-        """Class representative"""
-        return (f"{type(self).__name__}(two_seconds={type(self.two_seconds)}, six_hours={type(self.six_hours)}, "
-                f"one_minute={type(self.one_minute)}, zero={type(self.zero)}, span={type(self.span)})")
-
-    @str
-    def info(self):
-        """MultiGas Information"""
-        print(info)
-
-    def select(self, type_of_data: str) -> Self:
-        """Select data based period of measurement
-
-        Args:
-            type_of_data: Type of data. Choose 'two_seconds', 'six_hours', 'one_minute', 'zero', 'span'
-
-        Returns:
-            MultiGasData: Selected data
-        """
-        type_of_data = type_of_data.lower()
-
-        validate_selected_data(type_of_data)
-
-        if type_of_data not in types:
-            raise ValueError(f'⛔ Type of data must be one of {types}')
-
-        self.data_selected = type_of_data
-
-        self.selected: MultiGasData = self.get(type_of_data)
-
-        print("ℹ️ {} data selected.".format(type_of_data))
-        return self
-
-    def where_date_between(self, start_date: str, end_date: str) -> Self:
-        """Filtering ALL data between start and end date.
-
-        Args:
-            start_date (str): Optional. Start date. Date format YYYY-MM-DD
-            end_date (str): Optional. End date. Date format YYYY-MM-DD
-
-        Returns:
-            Self: MultiGas
-        """
-        for type_of_data in types:
-            multigas_data: MultiGasData = self.get(type_of_data)
-            if multigas_data is not None:
-                multigas_data.where_date_between(start_date, end_date).get()
-
-        return self
-
-    @property
-    def columns(self) -> list[str]:
-        """Get columns for specific data type.
-
-        Returns:
-            list[str]: List of column names
-        """
-        print("List of columns for {} data".format(self.data_selected))
-        return self.selected.columns
-
-    def plot(self, width: int = 12, height: int = 4, y_max_multiplier: float = 1.0,
-             datetime_column: str = 'TIMESTAMP', margins: float = 0.05, style = "whitegrid") -> Plot:
-        """Plot selected data and columns.
-
-        Args:
-            width (int, optional): Width of the plot. Defaults to 12.
-            height (int, optional): Height of the plot or column. Defaults to 4.
-            datetime_column (str, optional): A column name containing the datetime. Defaults to 'TIMESTAMP'.
-            y_max_multiplier (float, optional): Maximum multiplier for the y-axis. Defaults to 1.0.
-            margins (float, optional): Margin of the plot. Defaults to 0.05
-            style (str, optional): Style of the plot. Defaults to "whitegrid".
-
-        Returns:
-            Plot class
-        """
-        print("Data selected to plot: {}".format(self.data_selected))
-
-        return Plot(
-            df=self.selected.df,
-            width=width,
-            height=height,
-            datetime_column=datetime_column,
-            y_max_multiplier=y_max_multiplier,
-            margins=margins,
-            style=style
+        self.logger.info(
+            f"MultiGas initialized with {len(self._datasets)} dataset(s): "
+            f"{list(self._datasets.keys())}"
         )
 
-    def get(self, type_of_data: str = None) -> MultiGasData:
-        """Get selected data.
-
-        Returns:
-            MultiGasData: Selected data
-        """
-        if type_of_data is None:
-            type_of_data = self.data_selected
-
-        print("✅ {} data loaded".format(type_of_data))
-
-        match type_of_data:
-            case 'two_seconds':
-                return self.two_seconds
-            case 'six_hours':
-                return self.six_hours
-            case 'one_minute':
-                return self.one_minute
-            case 'zero':
-                return self.zero
-            case 'span':
-                return self.span
-
-    def extract_daily(self, directory_name: str) -> Dict[str, List[Dict[str, int]]]:
-        """Extract daily data.
+    def _load_dataset(self, dataset_type: DatasetType, file_path: PathLike) -> None:
+        """Load a single dataset.
 
         Args:
-            directory_name (str): Where available data would be saved.
+            dataset_type: Type of dataset
+            file_path: Path to data file
+
+        Raises:
+            LoaderError: If loading fails
+        """
+        file_path = Path(file_path)
+        self.logger.info(f"Loading {dataset_type.value} from {file_path}")
+
+        # Load data
+        df = self.loader.load(
+            file_path=file_path,
+            dataset_type=dataset_type,
+            normalize=self._normalize,
+            use_cache=self._cache_normalized,
+        )
+
+        # Extract metadata
+        metadata = self.metadata_extractor.extract(df, file_path)
+
+        # Also try TOA5 header extraction
+        toa5_metadata = self.metadata_extractor.extract_from_toa5_header(file_path)
+        if toa5_metadata:
+            # Update metadata with TOA5 info
+            for key, value in toa5_metadata.items():
+                if not hasattr(metadata, key) or getattr(metadata, key) == "Unknown":
+                    setattr(metadata, key, value)
+
+        # Create Dataset
+        dataset = Dataset(df=df, dataset_type=dataset_type, metadata=metadata)
+
+        # Store dataset
+        self._datasets[dataset_type.value] = dataset
+
+        self.logger.info(
+            f"Loaded {dataset_type.value}: {len(df)} rows, "
+            f"{len(df.columns)} columns, "
+            f"station: {metadata.station}"
+        )
+
+    @property
+    def two_seconds(self) -> Optional[Dataset]:
+        """Get two-second interval dataset.
 
         Returns:
-            Self: MultiGas
+            Dataset or None if not loaded
         """
-        availability: Dict[str, List[Dict[str, int]]] = {}
+        return self._datasets.get(DatasetType.TWO_SECONDS.value)
 
-        for type_of_data in self.files.keys():
-            multigas_data: MultiGasData | None = self.select(type_of_data).get()
-            if multigas_data is not None:
-                availability[type_of_data] = multigas_data.extract_daily(directory_name)
+    @property
+    def six_hours(self) -> Optional[Dataset]:
+        """Get six-hour interval dataset.
 
-        return availability
+        Returns:
+            Dataset or None if not loaded
+        """
+        return self._datasets.get(DatasetType.SIX_HOURS.value)
 
-    def save(self, file_type: str = 'excel', output_dir: str = None,
-             use_filtered: bool = True, **kwargs) -> None:
-        """Save ALL fixed data as an excel file and/or CSV.
+    @property
+    def one_minute(self) -> Optional[Dataset]:
+        """Get one-minute interval dataset.
+
+        Returns:
+            Dataset or None if not loaded
+        """
+        return self._datasets.get(DatasetType.ONE_MINUTE.value)
+
+    @property
+    def zero(self) -> Optional[Dataset]:
+        """Get zero calibration dataset.
+
+        Returns:
+            Dataset or None if not loaded
+        """
+        return self._datasets.get(DatasetType.ZERO.value)
+
+    @property
+    def span(self) -> Optional[Dataset]:
+        """Get span calibration dataset.
+
+        Returns:
+            Dataset or None if not loaded
+        """
+        return self._datasets.get(DatasetType.SPAN.value)
+
+    def select(self, dataset_type: str) -> Dataset:
+        """Select dataset by type name.
+
+        Provided for backward compatibility with v1.x API.
+        Prefer direct property access (e.g., mg.six_hours) in v2.0.
 
         Args:
-            file_type (str): Chose between 'csv', 'excel', 'xlsx', 'xls'
-            output_dir (str): Output directory. Use default output directory if None.
-            use_filtered (bool): use filtered data. Defaults to True
-            kwargs (dict): Keyword arguments
+            dataset_type: Dataset type name (two_seconds, six_hours, etc.)
+
+        Returns:
+            Dataset instance
+
+        Raises:
+            KeyError: If dataset type doesn't exist
         """
-        validate_file_type(file_type)
+        if dataset_type not in self._datasets:
+            available = list(self._datasets.keys())
+            raise KeyError(
+                f"Dataset type '{dataset_type}' not found. Available types: {available}"
+            )
+        return self._datasets[dataset_type]
 
-        params = {
-            'output_dir': output_dir,
-            'use_filtered': use_filtered,
-        }
+    def as_collection(self) -> DatasetCollection:
+        """Get all datasets as a collection.
 
-        for type_of_data in types:
-            multigas_data: MultiGasData | None = self.get(type_of_data)
-            if multigas_data is not None:
-                multigas_data.save_as(file_type=file_type, **params, **kwargs)
-            else:
-                print(f'⚠️ Data {type_of_data} is empty. Skip.')
+        Returns:
+            DatasetCollection with all loaded datasets
+        """
+        return DatasetCollection(self._datasets)
+
+    def filter_all(
+        self,
+        start: Optional[DateLike] = None,
+        end: Optional[DateLike] = None,
+        inclusive: str = "both",
+    ) -> DatasetCollection:
+        """Filter all datasets by date range.
+
+        Args:
+            start: Start date
+            end: End date
+            inclusive: Include boundaries ('both', 'left', 'right', 'neither')
+
+        Returns:
+            DatasetCollection with filtered datasets
+        """
+        collection = self.as_collection()
+        return collection.filter_all(start, end, inclusive)
+
+    def extract_daily(
+        self, start_date: DateLike, end_date: DateLike
+    ) -> Dict[str, pd.DataFrame]:
+        """Extract daily data for all datasets.
+
+        Convenience method for getting data within date range
+        as a dictionary of DataFrames.
+
+        Args:
+            start_date: Start date
+            end_date: End date
+
+        Returns:
+            Dictionary mapping dataset type to filtered DataFrame
+        """
+        filtered_collection = self.filter_all(start_date, end_date)
+        return filtered_collection.to_dict()
+
+    def summary(self) -> pd.DataFrame:
+        """Get summary statistics for all loaded datasets.
+
+        Returns:
+            DataFrame with summary info for each dataset
+        """
+        collection = self.as_collection()
+        return collection.summary()
+
+    def clear_cache(self) -> int:
+        """Clear cached normalized files.
+
+        Returns:
+            Number of cache files deleted
+        """
+        count = self.loader.clear_cache()
+        self.logger.info(f"Cleared {count} cache file(s)")
+        return count
+
+    def __repr__(self) -> str:
+        """String representation of MultiGas instance."""
+        dataset_types = list(self._datasets.keys())
+        return f"MultiGas(datasets={dataset_types})"

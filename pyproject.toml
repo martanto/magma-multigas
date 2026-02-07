@@ -78,6 +78,11 @@ python_classes = "Test*"
 python_functions = "test_*"
 addopts = "-v --cov=magma_multigas --cov-report=term-missing"
 
+[dependency-groups]
+dev = [
+    "isort>=7.0.0",
+]
+
 [project.urls]
 Homepage = "https://github.com/martanto/magma-multigas"
 Issues = "https://github.com/martanto/magma-multigas/issues"
