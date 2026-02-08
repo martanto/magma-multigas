@@ -15,6 +15,7 @@ import pandas as pd
 from ..config.logging import get_logger
 from ..core.types import ColumnName
 from ..data.dataset import Dataset
+from . import markdown as md_utils
 
 logger = get_logger(__name__)
 
@@ -39,6 +40,21 @@ class CompletenessReport:
     column_stats: pd.DataFrame
     missing_periods: List[Tuple[pd.Timestamp, pd.Timestamp]]
 
+    def to_markdown(self) -> str:
+        """Export report as markdown.
+
+        Returns:
+            Markdown formatted report string
+        """
+        return md_utils.completeness_to_markdown(
+            self.total_records,
+            self.expected_records,
+            self.completeness_pct,
+            self.date_range,
+            self.column_stats,
+            self.missing_periods,
+        )
+
 
 @dataclass
 class GapReport:
@@ -55,6 +71,16 @@ class GapReport:
     longest_gap: timedelta
     gaps: List[Tuple[pd.Timestamp, pd.Timestamp, timedelta]]
     gap_summary: Dict[str, Any]
+
+    def to_markdown(self) -> str:
+        """Export report as markdown.
+
+        Returns:
+            Markdown formatted report string
+        """
+        return md_utils.gaps_to_markdown(
+            self.total_gaps, self.longest_gap, self.gaps, self.gap_summary
+        )
 
 
 @dataclass
@@ -75,6 +101,20 @@ class CalibrationReport:
     span_count: int
     calibration_frequency: Optional[timedelta]
 
+    def to_markdown(self) -> str:
+        """Export report as markdown.
+
+        Returns:
+            Markdown formatted report string
+        """
+        return md_utils.calibrations_to_markdown(
+            self.zero_periods,
+            self.span_periods,
+            self.zero_count,
+            self.span_count,
+            self.calibration_frequency,
+        )
+
 
 @dataclass
 class AnomalyReport:
@@ -87,6 +127,7 @@ class AnomalyReport:
         method: Detection method used
         threshold: Threshold used for detection
         summary_stats: Statistical summary of anomalies
+        total_records: Total records analyzed (optional for markdown export)
     """
 
     column: str
@@ -95,6 +136,22 @@ class AnomalyReport:
     method: str
     threshold: float
     summary_stats: Dict[str, float]
+    total_records: int = 0
+
+    def to_markdown(self) -> str:
+        """Export report as markdown.
+
+        Returns:
+            Markdown formatted report string
+        """
+        return md_utils.anomalies_to_markdown(
+            self.column,
+            self.anomaly_count,
+            self.method,
+            self.threshold,
+            self.summary_stats,
+            self.total_records,
+        )
 
 
 class DataDiagnostics:
@@ -384,6 +441,7 @@ class DataDiagnostics:
                 method=method,
                 threshold=threshold,
                 summary_stats={},
+                total_records=len(self.df),
             )
 
         # Detect anomalies based on method
@@ -438,6 +496,7 @@ class DataDiagnostics:
             method=method,
             threshold=threshold,
             summary_stats=summary_stats,
+            total_records=len(data),
         )
 
     def get_statistical_summary(
@@ -593,6 +652,69 @@ class DataDiagnostics:
             },
             "recommendations": recommendations,
         }
+
+    def save_report_markdown(
+        self,
+        output_path: str,
+        include_completeness: bool = True,
+        include_gaps: bool = True,
+        include_calibrations: bool = True,
+        include_health: bool = True,
+    ) -> None:
+        """Generate comprehensive markdown report and save to file.
+
+        Args:
+            output_path: Path to save markdown file
+            include_completeness: Include completeness analysis
+            include_gaps: Include gap detection
+            include_calibrations: Include calibration analysis
+            include_health: Include health report
+
+        Example:
+            >>> diag = DataDiagnostics(dataset)
+            >>> diag.save_report_markdown("report.md")
+        """
+        sections = []
+
+        sections.append("# Data Quality Diagnostics Report\n")
+        sections.append(
+            f"**Generated**: {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+        )
+        sections.append(
+            f"**Dataset**: {len(self.dataset)} records, "
+            f"{len(self.dataset.df.columns)} columns\n"
+        )
+        sections.append("---\n")
+
+        if include_health:
+            logger.info("Generating health report...")
+            health = self.generate_health_report()
+            sections.append(md_utils.health_report_to_markdown(health))
+            sections.append("---\n")
+
+        if include_completeness:
+            logger.info("Generating completeness report...")
+            completeness = self.analyze_completeness()
+            sections.append(completeness.to_markdown())
+            sections.append("---\n")
+
+        if include_gaps:
+            logger.info("Generating gap report...")
+            gaps = self.detect_gaps()
+            sections.append(gaps.to_markdown())
+            sections.append("---\n")
+
+        if include_calibrations:
+            logger.info("Generating calibration report...")
+            calibrations = self.analyze_calibrations()
+            sections.append(calibrations.to_markdown())
+            sections.append("---\n")
+
+        # Write to file
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write("\n".join(sections))
+
+        logger.info(f"Saved markdown report to {output_path}")
 
     # Private helper methods
 
