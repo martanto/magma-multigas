@@ -15,6 +15,7 @@ from .core import (
 from .data import Dataset, DatasetCollection, DatasetMetadata
 
 # v2.0 API (preferred)
+from .analysis import DataDiagnostics
 from .multigas import MultiGas
 from .plotting import AvailabilityPlotter, PlotConfig, TimeSeriesPlotter
 
@@ -56,6 +57,8 @@ __all__ = [
     "Dataset",
     "DatasetCollection",
     "DatasetMetadata",
+    # Analysis
+    "DataDiagnostics",
     # Plotting
     "PlotConfig",
     "TimeSeriesPlotter",
